@@ -34,5 +34,16 @@
   "homepage": "https://github.com/SumitKanchan4/SPFx#readme",
   "engines": {
     "node": ">=0.10.0"
-  }
+  },
+  "keywords": [
+    "spfx",
+    "sharepoint",
+    "sharepoint online",
+    "sharepoint spfx",
+    "2016 sharepoint",
+    "sharepoint framework",
+    "SPHttpClientBatch",
+    "SPHttpClientResponse",
+    "spHttpClient"
+  ]
 }
