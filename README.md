@@ -7,6 +7,7 @@ This is the package for reducing the development time which will contain all the
 
 **SPLogger** : This class is helpful in logging if any of the issues are found. For now this checks for the list in the working directory in sharepoint with the following information
 > List Name: Error Logs
+
 > Required Columns: Title (default), Error Type (CHoice: ERROR,DEBUG,INFO), Error Description (Multiple line of text)
 
 Following methods are contained in this class:
