@@ -406,7 +406,7 @@ class SPListOperations extends SPHelperBase {
      */
     public getListsDetailsByBaseTemplateID(baseTemplate: BaseTemplate): Promise<ISPBaseResponse> {
 
-        var url = `${this.WebUrl}/_api/web/lists?$filter=BaseTemplate eq ${baseTemplate}&$select= Title`;
+        var url = `${this.WebUrl}/_api/web/lists?$filter=BaseTemplate eq ${baseTemplate}`;
 
         return this.spQueryGET(url).then((response) => {
             return response;
