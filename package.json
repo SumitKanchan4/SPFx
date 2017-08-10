@@ -1,6 +1,6 @@
 {
   "name": "spfxhelper",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Package to help SharePoint developers to speed up development time.",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
