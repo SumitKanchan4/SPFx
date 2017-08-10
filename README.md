@@ -33,6 +33,7 @@ Following are the methods contained in this class
 * createFolderInList
 * updateListItem
 * getListMetadata
+* getListsDetailsByBaseTemplateID
 ```
 
 **SPHelperCommon** : This class contains the most common methods

@@ -382,6 +382,11 @@ class SPListOperations extends SPHelperBase {
         }
     }
 
+    /**
+     * Returns the metadata for the list creation
+     * @param lstDetail 
+     * @param webURL 
+     */
     public getListMetadata(lstDetail: IListPOST, webURL: string): ISPPostRequest {
 
         var postListData: string = `{ '__metadata': { 'type': 'SP.List' }, 'BaseTemplate': ${lstDetail.baseTemplate},'EnableFolderCreation': ${lstDetail.allowFolder}, 'ContentTypesEnabled': ${lstDetail.allowContentTypes}, 'AllowContentTypes': ${lstDetail.allowContentTypes}, 'Description': '${lstDetail.description}', 'Title':'${lstDetail.title}'}`;
@@ -393,6 +398,19 @@ class SPListOperations extends SPHelperBase {
         };
 
         return post;
+    }
+
+    /**
+     * 
+     * @param baseTemplate Returns the list details based on the Base Template
+     */
+    public getListsDetailsByBaseTemplateID(baseTemplate: BaseTemplate): Promise<ISPBaseResponse> {
+
+        var url = `${this.WebUrl}/_api/web/lists/$filter=BaseTemplate eq ${baseTemplate}&$select= Title`;
+
+        return this.spQueryGET(url).then((response) => {
+            return response;
+        });
     }
 }
 
