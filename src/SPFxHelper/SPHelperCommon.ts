@@ -8,7 +8,7 @@ import { UrlQueryParameterCollection, Validate } from '@microsoft/sp-core-librar
 class SPHelperCommon {
 
     /** Checks is the string is null or empty or undefined */
-    public static isStringNullOrEmpy(value: string): boolean {
+    public static isStringNullOrEmpty(value: string): boolean {
         try {
             Validate.isNonemptyString(value, 'value');
             return false;

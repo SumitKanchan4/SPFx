@@ -11,6 +11,7 @@ import { SPHelperBase } from './SPHelperBase';
 import { SPHelperCommon } from './SPHelperCommon';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { IFieldGET, IFieldPOST, FieldType, FieldScope } from './Props/ISPFieldProps';
+import { ISPBaseResponse } from './Props/ISPBaseProps';
 
 /**
  * This class will contain only the SPField specific methods
@@ -106,7 +107,7 @@ class SPFieldOperations extends SPHelperBase {
                     status: response.status,
                     statusText: response.statusText,
                     title: fieldTitle,
-                    errorMethod: 'SPFieldOperations.fieldExistsInView'
+                    errorMethod: 'SPFieldOperations.getFieldByView'
                 };
 
                 if (response.ok && response.result.value.length > 0) {
@@ -132,7 +133,74 @@ class SPFieldOperations extends SPHelperBase {
                 status: this.errorStatus,
                 statusText: error.message,
                 title: fieldTitle,
-                errorMethod: 'SPFieldOperations.fieldExistsInView'
+                errorMethod: 'SPFieldOperations.getFieldByView'
+            });
+        }
+    }
+
+    /**
+     * Returns all the fiedls associated with the view
+     * @param listTitle : title of the list
+     * @param viewName : title of the view
+     */
+    public getFieldsByView(listTitle: string, viewName: string): Promise<ISPBaseResponse> {
+        try {
+            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/`;
+
+            return this.spQueryGET(url).then((response) => {
+
+                var fields: ISPBaseResponse = {
+                    errorMethod: 'SPFieldOperations.getFieldsByView',
+                    ok: response.ok,
+                    responseJSON: response.responseJSON,
+                    result: response.result.Items,
+                    status: response.status,
+                    statusText: response.statusText
+                }
+
+                return Promise.resolve(fields);
+            });
+        } catch (error) {
+            Promise.resolve({
+                errorMethod: 'SPFieldOperations.getFieldsByView',
+                ok: false,
+                responseJSON: error.message,
+                result: [],
+                status: this.errorStatus,
+                statusText: error.message
+            });
+        }
+    }
+
+    /**
+    * Returns all the fiedls associated with the list
+    * @param listTitle : title of the list
+    */
+    public getFieldsByList(listTitle: string): Promise<ISPBaseResponse> {
+        try {
+            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/fields/`;
+
+            return this.spQueryGET(url).then((response) => {
+
+                var fields: ISPBaseResponse = {
+                    errorMethod: 'SPFieldOperations.getFieldsByView',
+                    ok: response.ok,
+                    responseJSON: response.responseJSON,
+                    result: response.result.value,
+                    status: response.status,
+                    statusText: response.statusText
+                }
+
+                return Promise.resolve(fields);
+            });
+        } catch (error) {
+            Promise.resolve({
+                errorMethod: 'SPFieldOperations.getFieldsByView',
+                ok: false,
+                responseJSON: error.message,
+                result: [],
+                status: this.errorStatus,
+                statusText: error.message
             });
         }
     }
@@ -161,7 +229,7 @@ class SPFieldOperations extends SPHelperBase {
                         status: response.status,
                         statusText: response.statusText,
                         title: fieldTitle,
-                        errorMethod: 'SPFieldOperations.checkListColExists'
+                        errorMethod: 'SPFieldOperations.getFieldByList'
                     };
                 }
                 else {
@@ -187,7 +255,7 @@ class SPFieldOperations extends SPHelperBase {
                 status: this.errorStatus,
                 statusText: error.message,
                 title: fieldTitle,
-                errorMethod: 'SPFieldOperations.checkListColExists'
+                errorMethod: 'SPFieldOperations.getFieldByList'
             });
         }
     }

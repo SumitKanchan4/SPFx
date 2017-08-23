@@ -412,6 +412,72 @@ class SPListOperations extends SPHelperBase {
             return response;
         });
     }
+
+    /**
+     * Returns the views associated with the list.
+     * @param listTitle :Title of the list
+     */
+    public getViewsByList(listTitle: string): Promise<ISPBaseResponse> {
+        try {
+            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/`;
+
+            return this.spQueryGET(url).then((response) => {
+
+                var fields: ISPBaseResponse = {
+                    errorMethod: 'SPFieldOperations.getFieldsByView',
+                    ok: response.ok,
+                    responseJSON: response.responseJSON,
+                    result: response.result.value,
+                    status: response.status,
+                    statusText: response.statusText
+                }
+
+                return Promise.resolve(fields);
+            });
+        } catch (error) {
+            Promise.resolve({
+                errorMethod: 'SPFieldOperations.getFieldsByView',
+                ok: false,
+                responseJSON: error.message,
+                result: [],
+                status: this.errorStatus,
+                statusText: error.message
+            });
+        }
+    }
+
+    /**
+     * Returns all the content types associated with the list
+     * @param listTitle : Title of the list
+     */
+    public getContentTypesByList(listTitle: string): Promise<ISPBaseResponse> {
+        try {
+            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/contentTypes/`;
+
+            return this.spQueryGET(url).then((response) => {
+
+                var fields: ISPBaseResponse = {
+                    errorMethod: 'SPFieldOperations.getFieldsByView',
+                    ok: response.ok,
+                    responseJSON: response.responseJSON,
+                    result: response.result.value,
+                    status: response.status,
+                    statusText: response.statusText
+                }
+
+                return Promise.resolve(fields);
+            });
+        } catch (error) {
+            Promise.resolve({
+                errorMethod: 'SPFieldOperations.getFieldsByView',
+                ok: false,
+                responseJSON: error.message,
+                result: [],
+                status: this.errorStatus,
+                statusText: error.message
+            });
+        }
+    }
 }
 
 export { SPListOperations };

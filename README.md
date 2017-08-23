@@ -22,55 +22,59 @@ Following methods are contained in this class:
 
 Following are the methods contained in this class
 ```
-* getInstance       : returns the instance of the class
-* getListByTitle    : returns the list by title
-* createList   
-* getListItemsByQuery
-* getListItemByID
-* getListItems
-* createListItem
-* createFolderInDocLib
-* createFolderInList
-* updateListItem
-* getListMetadata
-* getListsDetailsByBaseTemplateID
+* getInstance           : returns the instance of the class
+* getListByTitle        : returns the list by title
+* createList            : creates the list
+* getListItemsByQuery   : get the list items based on the query parameter
+* getListItemByID       : get the list item based on the item ID
+* getListItems          : returns all the list items based on the row count. If row count is not provided will return max
+* createListItem        : creates the list itme
+* createFolderInDocLib  : creates the folder in the document library
+* createFolderInList    : creates the folder in the list
+* updateListItem        : updates the list item
+* getListMetadata       : returns the list metadata required to create the list
+* getListsDetailsByBaseTemplateID   : Returns the lists based on the template ID
+* getContentTypesByList : returns the content types associated with the list
+* getViewsByList        : return the view associated with the list
 ```
 
 **SPHelperCommon** : This class contains the most common methods
 
 Following are the methods contained in this class:
 ```
-* isStringNullOrEmpy
-* isNull
-* getFieldInternalName
-* getParameterValue
+* isStringNullOrEmpy    : checks for the string null
+* isNull                : check for the object null
+* getFieldInternalName  : returns the internal name of the field (removes the _x0020_)
+* getParameterValue     : returns the parameter value from URL
 ```
 
 **SPFieldOperations** : This class is responsible for all the field based operations:
 
 Following methods are contained in this class:
 ```
-* getInstance
-* addFieldToView
-* getFieldByView
-* getFieldByList
-* addSiteColumnToList
-* createSiteColumn
-* getFieldBySite
-* getColumnMetadata
-* addColumnToList
+* getInstance           : returns the instance of the class to access the methods
+* addFieldToView        : adds the field to the view in the list
+* getFieldByView        : returns the field details by view
+* getFieldByList        : returns the field details from the list
+* addSiteColumnToList   : adds the site column to the list
+* createSiteColumn      : creates the site column
+* getFieldBySite        : returns the fields details of the site column
+* getColumnMetadata     : returns the column metadata required for the creation of the column
+* addColumnToList       : add the column to the list
+* getFieldsByList       : returns all the fields associated with the list
+* getFieldsByView       : returns all the fields associated with view in a list
 ```
 
 **SPCommonOperations** : This class is responsible for all the common operations in sharepoint
 
 Following are the methods contained in this class:
 ```
-* getInstance
-* getDocIconByFiles
-* queryGETResquest
-* queryPOSTRequest
-* queryMERGERequest
-* queryPATCHRequest
+* getInstance           : returns the instance of the class to access the methods
+* getDocIconByFiles     : returns the doc icons for the corresponding files
+* queryGETResquest      : method to query any custom query with 'GET' verb
+* queryPOSTRequest      : method to query any custom query with 'POST' verb
+* queryMERGERequest     : method to query any custom query with 'MERGE' verb
+* queryPATCHRequest     : method to query any custom query with 'PATCH' verb
 ```
 
 **SPBatchOperations** : This class is responsible for batch operations in sharepoint Framework
