@@ -1,4 +1,30 @@
-// TO get user image: https://eur.delve.office.com/mt/v3/people/profileimage?userId=in8sausa%40lego.com&size=L
-// To get user information: https://legogroup.sharepoint.com/sites/GlobalCampaignHub-DEV/_api/SP.UserProfiles.PeopleManager/GetPropertiesFor(accountName=@v)?@v='i:0%23.f|membership|in8anikum@lego.com'
+import { SPHelperBase } from './SPHelperBase';
+import { SPHttpClient } from '@microsoft/sp-http';
+import { SPHelperCommon } from './SPHelperCommon';
 
-//http://www.vrdmn.com/2013/07/sharepoint-2013-get-userprofile.html
+class SPUserOperations extends SPHelperBase {
+
+    private static instance: SPUserOperations;
+
+    private constructor(spHttpClient: SPHttpClient, webUrl: string) {
+        super(spHttpClient, webUrl);
+    }
+
+    /** Use this method to get the SPUserOperations class Object */
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPUserOperations {
+
+        SPUserOperations.instance = SPHelperCommon.isNull(SPUserOperations.instance) ? new SPUserOperations(spHttpClient, webUrl) : SPUserOperations.instance;
+
+        return SPUserOperations.instance;
+
+    }
+
+    
+    public static isUserGroup(groupName: string, email : string):void{
+
+
+
+    }
+}
+
+export { SPUserOperations };
