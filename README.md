@@ -27,7 +27,8 @@ Following are the methods contained in this class
 * createList            : creates the list
 * getListItemsByQuery   : get the list items based on the query parameter
 * getListItemByID       : get the list item based on the item ID
-* getListItems          : returns all the list items based on the row count. If row count is not provided will return max
+* getListItems          : returns all the list items based on the row count. 
+                          If row count is not provided will return max
 * createListItem        : creates the list itme
 * createFolderInDocLib  : creates the folder in the document library
 * createFolderInList    : creates the folder in the list
