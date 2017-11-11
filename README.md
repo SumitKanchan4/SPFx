@@ -1,95 +1,124 @@
 # SharePoint Framework Helper
 
+[![SharePoint Framework Helper](/Images/SP.png?raw=true "SharePoint Framework Helper" )](http://sharepointwidgets.blogspot.com)
 
-This is the package for reducing the development time which will contain all the basic methods to implement the SharePoint Framework solution. I have tried to cover most of the basic operations that we use in every solution. I will be writing more blogs to make you understand how these are implemented and how we can use them. I will continue adding more and more methods with time, so keep watching.
+In the need to develop the solution faster and easier I have created a [npm package](https://www.npmjs.com/package/spfxhelper), which will give you the flexibility to enjoy the much used logic handy and easy when writing code for SharePoint framework client side webparts or SharePoint framework extensions.
 
-## Methods
+This [npm package](https://www.npmjs.com/package/spfxhelper) contains the most commonly used logic or I should say the operations that are used almost in every SPFx client side webpart or SPFx extensions. Using this npm package you can create your webparts much more easily and faster. This is very simple and handy.
 
-**SPLogger** : This class is helpful in logging if any of the issues are found. For now this checks for the list in the working directory in sharepoint with the following information
-> List Name: Error Logs
+This npm package code is also available on [GitHub](https://github.com/SumitKanchan4/SPFx) so if you are interested you can have a look at the implementation as well, or even you can request for the addition of new methods that you feel might help others as well.
 
-> Required Columns: Title (default), Error Type (CHoice: ERROR,DEBUG,INFO), Error Description (Multiple line of text)
+# Why to use
+This library is broken into different operations, so you only need to import the operations that you want to use. Below are the operations description:
 
-Following methods are contained in this class:
-```
-* getInstance   : returns the instance of the class
-* logError      : logs the error in the SharePoint List
-* logDebug      : logs the debug info in the sharepoint list
-```
+### SPHelperBase 
+>This is the base class and one cannot create object of this class. This class is responsible for the main interaction with SharePoint. This class is used internally from all the other classes. This class contains all the basic interaction methods with SharePoint.
+
+### SPListOperations 
+>This is the main class for all the operations related to SharePoint lists. It has methods for all the operations like getListByTitle, getListItemsByQuery, createListItem etc..
+
+### SPFieldOperations
+>This is the class responsible for the operations related to SharePoint Fields. It has methods like getFieldByList, addSiteColumnToList, createSiteColumn etc..
+
+### SPCommonOperations
+>This class is provided to give the flexible to the developers/users to get the information for some queries for which method are not found in any of the classes.
+
+### SPHelperCommon
+>This class contains only static methods and does not interact with the SharePoint. It contains some of the most common helper methods like isNull, stringIsNullOrEmpty etc..
+### SPLogger
+>This class can be used for the logging purpose. For using this you need to make some configuration manually
+Create a SharePoint List with the title: ‘Error Logs’
+Create Single line of text columns with the title
+Error Type (Choice field- ERROR, DEBUG, INFO)
+Error Description (Multiple line of text)
+
+### SPBatchOperations
+>This class gives the flexibility to use the batch operations in SharePoint Framework.
+
+# Installation
+To install the package you just need to write the following command in the node console
+
+`npm install spfxhelper`
 
 
-**SPListOperations** : This class is responsible for all the list based operations.
+And your solution is ready for using the library. :-)
 
-Following are the methods contained in this class
-```
-* getInstance           : returns the instance of the class
-* getListByTitle        : returns the list by title
-* createList            : creates the list
-* getListItemsByQuery   : get the list items based on the query parameter
-* getListItemByID       : get the list item based on the item ID
-* getListItems          : returns all the list items based on the row count. 
-                          If row count is not provided will return max
-* createListItem        : creates the list itme
-* createFolderInDocLib  : creates the folder in the document library
-* createFolderInList    : creates the folder in the list
-* updateListItem        : updates the list item
-* getListMetadata       : returns the list metadata required to create the list
-* getListsDetailsByBaseTemplateID   : Returns the lists based on the template ID
-* getContentTypesByList : returns the content types associated with the list
-* getViewsByList        : return the view associated with the list
-```
+# How to use this library
+The library is very simple to use. Below is the sample code how you can use
 
-**SPHelperCommon** : This class contains the most common methods
-
-Following are the methods contained in this class:
-```
-* isStringNullOrEmpy    : checks for the string null
-* isNull                : check for the object null
-* getFieldInternalName  : returns the internal name of the field (removes the _x0020_)
-* getParameterValue     : returns the parameter value from URL
-```
-
-**SPFieldOperations** : This class is responsible for all the field based operations:
-
-Following methods are contained in this class:
-```
-* getInstance           : returns the instance of the class to access the methods
-* addFieldToView        : adds the field to the view in the list
-* getFieldByView        : returns the field details by view
-* getFieldByList        : returns the field details from the list
-* addSiteColumnToList   : adds the site column to the list
-* createSiteColumn      : creates the site column
-* getFieldBySite        : returns the fields details of the site column
-* getColumnMetadata     : returns the column metadata required for the creation of the column
-* addColumnToList       : add the column to the list
-* getFieldsByList       : returns all the fields associated with the list
-* getFieldsByView       : returns all the fields associated with view in a list
+Import the spfxhelper in you code file so you can have all the available functionalities
+```sh
+import { SPListOperations } from 'spfxhelper';
 ```
 
-**SPCommonOperations** : This class is responsible for all the common operations in sharepoint
+Within the curly braces you can have one of the following Operations depending upon you need. For example purpose i’ll use SPListOperations. 
 
-Following are the methods contained in this class:
-```
-* getInstance           : returns the instance of the class to access the methods
-* getDocIconByFiles     : returns the doc icons for the corresponding files
-* queryGETResquest      : method to query any custom query with 'GET' verb
-* queryPOSTRequest      : method to query any custom query with 'POST' verb
-* queryMERGERequest     : method to query any custom query with 'MERGE' verb
-* queryPATCHRequest     : method to query any custom query with 'PATCH' verb
-```
+Now to use the methods, you cannot create object of the class, as the singleton approach has been adopted. To get the object of the class you need to get the instance of the object using getInstance method.
 
-**SPBatchOperations** : This class is responsible for batch operations in sharepoint Framework
+I’ll prefer to create the property so I don’t have to pass the parameters again and again.Below is the code sample
 
-Following are the methods contained in this class
-```
-* get oSPBatch
-* getBatchGETRequest
-* getBatchPOSTRequest
-* SPHttpClientResponseToSPBaseResponse
+```sh
+/**
+  * This property returns the SPListOperation object
+  */
+ private get oListOperation(): SPListOperations {
+   return SPListOperations.getInstance(this.context.spHttpClient as any, this.context.pageContext.web.absoluteUrl);
+ }
 ```
 
+Now you can use this property to access the methods.
 
-**_Since I have tried to cover all the basic needs, so anyone feels any method or functionality to be included , please feel free to drop me a mail or suggest on git._**'
-###### Happy Coding...!!! :+1:
+# Methods
+Below are the listing of all the methods available in the library
 
-###### - Sumit Kanchan
+| Method Name | README |
+| ------ | ------ |
+| getInstance | returns the instance of the class |
+|logError|logs the error in the SharePoint List|
+|logDebug|logs the debug info in the SharePoint list|
+|getListByTitle|returns the list by title|
+|createList|creates the list|
+|getListItemsByQuery|get the list items based on the query parameter|
+|getListItemByID|get the list item based on the item ID|
+|getListItems|returns all the list items based on the row count. If row count is not provided will return max i.e.. 100|
+|createListItem|creates the list itme|
+|createFolderInDocLib|creates the folder in the document library|
+|createFolderInList|creates the folder in the list|
+|updateListItem|updates the list item|
+|getListMetadata|returns the list metadata required to create the list|
+|getListsDetailsByBaseTemplateID|Returns the lists based on the template ID|
+|getContentTypesByList|returns the content types associated with the list|
+|getViewsByList|return the view associated with the list|
+|isStringNullOrEmpy|checks for the string null|
+|isNull|check for the object null|
+|getFieldInternalName|returns the internal name of the field (removes the _x0020_)|
+|getParameterValue|returns the parameter value from URL|
+|addFieldToView|adds the field to the view in the list|
+|getFieldByView|returns the field details by view|
+|getFieldByList|returns the field details from the list|
+|addSiteColumnToList|adds the site column to the list|
+|createSiteColumn|creates the site column|
+|getFieldBySite|returns the fields details of the site column|
+|getColumnMetadata|returns the column metadata required for the creation of the column|
+|addColumnToList|add the column to the list|
+|getFieldsByList|returns all the fields associated with the list|
+|getFieldsByView|returns all the fields associated with view in a list|
+|getDocIconByFiles|returns the icons for the corresponding files|
+|queryGETResquest|method to query any custom query with 'GET' verb|
+|queryPOSTRequest |method to query any custom query with 'POST' verb|
+|queryMERGERequest|method to query any custom query with 'MERGE' verb|
+|queryPATCHRequest|method to query any custom query with 'PATCH' verb|
+|oSPBatch|property returns the SPHttpClientBatch object required to create batch query|
+|getBatchGETRequest|adds the url to the current SPHttpClientBatch object and returns response|
+|getBatchPOSTRequest|adds the url to the current  SPHttpClientBatch object and returns response|
+|SPHttpClientResponseToSPBaseResponse||
+
+
+>Do share how I can improve this library, so it can help all the SharePoint community
+
+
+
+
+Happy Coding
+
+Sumit Kanchan
