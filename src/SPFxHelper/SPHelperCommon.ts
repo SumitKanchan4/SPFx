@@ -49,6 +49,25 @@ class SPHelperCommon {
         var queryURL = new UrlQueryParameterCollection(url);
         return queryURL.getValue(paramName);
     }
+
+    /**
+     * Returns the age from current date
+     * @param dateString Date time string in ISO format
+     */
+    public calculateAge(dateString: string): number {
+        
+        try {
+            let paramAge = new Date(dateString);
+            let ageDifMs: number = Date.now() - paramAge.getTime();
+            let ageDate: Date = new Date(ageDifMs); // miliseconds from epoch
+            let age: number = ageDate.getUTCFullYear() - 1970;
+            age = (age > 0) ? age : 0;
+            return age;
+        }
+        catch (e) {
+            return -1;
+        }
+    }
 }
 
 export { SPHelperCommon };
