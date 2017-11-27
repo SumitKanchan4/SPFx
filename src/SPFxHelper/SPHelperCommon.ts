@@ -23,7 +23,7 @@ class SPHelperCommon {
         try {
 
             Validate.isNotNullOrUndefined(value, "value");
-            return false; 
+            return false;
         }
         catch (error) {
             return true;
@@ -54,8 +54,8 @@ class SPHelperCommon {
      * Returns the age from current date
      * @param dateString Date time string in ISO format
      */
-    public calculateAge(dateString: string): number {
-        
+    public static calculateAge(dateString: string): number {
+
         try {
             let paramAge = new Date(dateString);
             let ageDifMs: number = Date.now() - paramAge.getTime();
@@ -66,6 +66,19 @@ class SPHelperCommon {
         }
         catch (e) {
             return -1;
+        }
+    }
+
+    /**
+     * Returns the local storage (browser) object
+     */
+    public static getLocalStorage(): Storage {
+
+        if (!SPHelperCommon.isNull(typeof (Storage))) {
+            return localStorage
+        }
+        else {
+            return undefined;
         }
     }
 }
