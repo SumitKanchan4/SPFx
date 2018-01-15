@@ -5,6 +5,7 @@ import { SPHelperCommon } from './SPHelperCommon';
 class SPUserOperations extends SPHelperBase {
 
     private static instance: SPUserOperations;
+    private static webUrl: string = undefined;
 
     private constructor(spHttpClient: SPHttpClient, webUrl: string) {
         super(spHttpClient, webUrl);
@@ -14,16 +15,16 @@ class SPUserOperations extends SPHelperBase {
     public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPUserOperations {
 
         SPUserOperations.instance = SPHelperCommon.isNull(SPUserOperations.instance) ? new SPUserOperations(spHttpClient, webUrl) : SPUserOperations.instance;
-
+        SPUserOperations.webUrl = webUrl;
         return SPUserOperations.instance;
 
     }
 
-    
-    public static isUserGroup(groupName: string, email : string):void{
 
-         let query: string = `${this.WebUrl}/_api/web/SiteGroup/GetByName('${groupName}')?$filter=Email eq '${email}'`;
-        
+    public static isUserGroup(groupName: string, email: string): void {
+
+        let query: string = `${this.webUrl}/_api/web/SiteGroup/GetByName('${groupName}')?$filter=Email eq '${email}'`;
+
     }
 }
 
