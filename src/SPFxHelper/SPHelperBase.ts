@@ -90,7 +90,7 @@ class SPHelperBase {
         try {
             var options: ISPHttpClientOptions = {};
 
-            if (!SPHelperCommon.isStringNullOrEmpy(postProps.body)) {
+            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
                 options = {
                     headers: { 'odata-version': '3.0' },
                     body: postProps.body
@@ -126,7 +126,7 @@ class SPHelperBase {
         try {
             var options: ISPHttpClientOptions = {};
 
-            if (!SPHelperCommon.isStringNullOrEmpy(postProps.body)) {
+            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
                 options = {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',
@@ -168,7 +168,7 @@ class SPHelperBase {
         try {
             var options: ISPHttpClientOptions = {};
 
-            if (!SPHelperCommon.isStringNullOrEmpy(postProps.body)) {
+            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
                 options = {
                     headers: {
                         'Accept': 'application/json;odata=nometadata',

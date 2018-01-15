@@ -22,8 +22,8 @@ class SPUserOperations extends SPHelperBase {
     
     public static isUserGroup(groupName: string, email : string):void{
 
-
-
+         let query: string = `${this.WebUrl}/_api/web/SiteGroup/GetByName('${groupName}')?$filter=Email eq '${email}'`;
+        
     }
 }
 

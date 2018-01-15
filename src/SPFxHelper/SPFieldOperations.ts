@@ -451,12 +451,12 @@ class SPFieldOperations extends SPHelperBase {
         switch (fieldDetails.fieldType) {
             case FieldType.MultiChoice:
                 var multiChoices = `'${fieldDetails.choices.join(`','`)}'`;
-                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpy(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
+                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpty(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
                 metadata = `{ '__metadata': { 'type': 'SP.FieldMultiChoice' }, 'FieldTypeKind': 15, 'DefaultValue': '${fieldDetails.defaultValue}', {COLUMNGROUP}, 'Required': ${fieldDetails.isRequired}, 'Title': '${fieldDetails.title}', 'Choices': { '__metadata': { 'type': 'Collection(Edm.String)' }, 'results': [${multiChoices}] }, 'EditFormat': 0 }`;
                 break;
             case FieldType.Choice:
                 var choices = `'${fieldDetails.choices.join(`','`)}'`;
-                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpy(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
+                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpty(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
                 metadata = `{ '__metadata': { 'type': 'SP.FieldChoice' }, 'FieldTypeKind': 6, 'DefaultValue': '${fieldDetails.defaultValue}', {COLUMNGROUP} 'Required':  ${fieldDetails.isRequired}, 'Title': '${fieldDetails.title}', 'Choices': { '__metadata': { 'type': 'Collection(Edm.String)' }, 'results': [${choices}] }, 'EditFormat': 0 }`;
                 break;
             case FieldType.Number:

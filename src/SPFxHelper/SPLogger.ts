@@ -200,7 +200,7 @@ class SPLogger {
     private typeCastListToLog(listResponse: IListGET, errorMethod?: string): ILoggerResponse {
 
         var loggerResponse: ILoggerResponse = {
-            errorMethod: SPHelperCommon.isStringNullOrEmpy(errorMethod) ? listResponse.errorMethod : errorMethod,
+            errorMethod: SPHelperCommon.isStringNullOrEmpty(errorMethod) ? listResponse.errorMethod : errorMethod,
             ok: listResponse.ok,
             status: listResponse.status,
             statusText: listResponse.statusText,
@@ -217,7 +217,7 @@ class SPLogger {
     private typeCastFieldToLog(listResponse: IFieldGET, errorMethod?: string): ILoggerResponse {
 
         var loggerResponse: ILoggerResponse = {
-            errorMethod: SPHelperCommon.isStringNullOrEmpy(errorMethod) ? listResponse.errorMethod : errorMethod,
+            errorMethod: SPHelperCommon.isStringNullOrEmpty(errorMethod) ? listResponse.errorMethod : errorMethod,
             ok: listResponse.ok,
             status: listResponse.status,
             statusText: listResponse.statusText,

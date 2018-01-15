@@ -151,7 +151,7 @@ class SPListOperations extends SPHelperBase {
 
         try {
             var url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/Items`;
-            url = SPHelperCommon.isStringNullOrEmpy(query) ? url : `${url}${query}`;
+            url = SPHelperCommon.isStringNullOrEmpty(query) ? url : `${url}${query}`;
 
             return this.spQueryGET(url).then((response) => {
                 var itemsResponse: IListItemResponse = {

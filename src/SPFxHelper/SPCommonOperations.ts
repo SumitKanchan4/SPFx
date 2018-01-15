@@ -91,17 +91,17 @@ class SPCommonOperations extends SPHelperBase {
         var fileName: string;
         var file: IDoc = files.pop();
 
-        if (!SPHelperCommon.isStringNullOrEmpy(file.fileName)) {
+        if (!SPHelperCommon.isStringNullOrEmpty(file.fileName)) {
             fileName = file.fileName;
         }
         // Get the fileName from file url
-        else if (!SPHelperCommon.isStringNullOrEmpy(file.fileUrl)) {
+        else if (!SPHelperCommon.isStringNullOrEmpty(file.fileUrl)) {
             var fileNameIndex = file.fileUrl.lastIndexOf("/") + 1;
             fileName = file.fileUrl.substr(fileNameIndex);
         }
 
         // If filename is empty
-        if (SPHelperCommon.isStringNullOrEmpy(fileName)) {
+        if (SPHelperCommon.isStringNullOrEmpty(fileName)) {
             this.docDetails.push(
                 {
                     ok: false,
