@@ -1,6 +1,6 @@
 # SharePoint Framework Helper
 
-[![SharePoint Framework Helper](/Images/SP.png?raw=true "SharePoint Framework Helper" )](http://sharepointwidgets.com)
+[![SharePoint Framework Helper](/Images/sharePointWidgetsBanner.png?raw=true "SharePoint Framework Helper" )](https://www.sharepointwidgets.com)
 
 In the need to develop the solution faster and easier I have created a [npm package](https://www.npmjs.com/package/spfxhelper), which will give you the flexibility to enjoy the much used logic handy and easy when writing code for SharePoint framework client side webparts or SharePoint framework extensions.
 
