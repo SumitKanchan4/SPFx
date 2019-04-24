@@ -16,7 +16,7 @@ class SPLogger {
         callerName = callerName.replace(/ \(.+\)$/, ''); // Sanitize Chrome
         callerName = callerName.replace(/\@.+/, '');
         callerName = callerName.replace("prototype.", "");
-        callerName = callerName.split("at").length > 1 ? callerName.split("at")[1] : callerName;
+        callerName = callerName.split("at ").length > 1 ? callerName.split("at ")[1] : callerName;
         return callerName.trim();
     }
 
