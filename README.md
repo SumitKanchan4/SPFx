@@ -35,7 +35,7 @@ This library is broken into different operations, so you only need to import the
 # Installation
 To install the package you just need to write the following command in the node console
 
-`npm install spfxhelper`
+**`npm install spfxhelper`**
 
 
 And your solution is ready for using the library. :-)
@@ -107,10 +107,10 @@ Below are the listing of all the methods available in the library
 |queryPOSTRequest |method to query any custom query with 'POST' verb|
 |queryMERGERequest|method to query any custom query with 'MERGE' verb|
 |queryPATCHRequest|method to query any custom query with 'PATCH' verb|
-|oSPBatch|property returns the SPHttpClientBatch object required to create batch query|
-|getBatchGETRequest|adds the url to the current SPHttpClientBatch object and returns response|
-|getBatchPOSTRequest|adds the url to the current  SPHttpClientBatch object and returns response|
-|SPHttpClientResponseToSPBaseResponse||
+|~~oSPBatch~~|~~property returns the SPHttpClientBatch object required to create batch query~~|
+|~~getBatchGETRequest~~|~~adds the url to the current SPHttpClientBatch object and returns response~~|
+|~~getBatchPOSTRequest~~|~~adds the url to the current  SPHttpClientBatch object and returns response~~|
+|~~SPHttpClientResponseToSPBaseResponse~~||
 
 
 >Do share how I can improve this library, so it can help all the SharePoint community
@@ -119,5 +119,7 @@ Below are the listing of all the methods available in the library
 
 
 Happy Coding
-#SharePointWidgets #MicrosoftSharePoint
+
+*#SharePointWidgets #MicrosoftSharePoint*
+
 Sumit Kanchan
