@@ -1,22 +1,22 @@
 {
   "name": "spfxhelper",
-  "version": "1.5.1",
-  "description": "Package to help SharePoint developers to speed up development time.",
+  "version": "2.0.0",
+  "description": "Bundle of core functions which can be used in every project",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "dependencies": {
     "@microsoft/sp-client-base": "~1.0.0",
-    "@microsoft/sp-core-library": "~1.2.0",
-    "@microsoft/sp-webpart-base": "~1.2.0"
+    "@microsoft/sp-core-library": "^1.8.1",
+    "@microsoft/sp-http": "^1.8.1",
+    "@microsoft/sp-odata-types": "^1.8.1"
   },
   "deprecated": false,
   "devDependencies": {
+    "@microsoft/sp-module-interfaces": "~1.8.1",
     "@microsoft/sp-build-web": "~1.2.0",
-    "@microsoft/sp-module-interfaces": "~1.2.0",
-    "@microsoft/sp-webpart-workbench": "~1.2.0",
-    "gulp": "~3.9.1"
+    "gulp": "~4.0.1"
   },
-  "bundleDependencies": false,
+  "bundleDependencies": [],
   "scripts": {
     "build": "gulp bundle",
     "clean": "gulp clean",

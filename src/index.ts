@@ -1,4 +1,3 @@
-export { SPBatchOperations } from './SPFxHelper/SPBatchOperations';
 export { SPCommonOperations } from './SPFxHelper/SPCommonOperations';
 export { SPFieldOperations } from './SPFxHelper/SPFieldOperations';
 export { SPHelperCommon } from './SPFxHelper/SPHelperCommon';
@@ -9,4 +8,3 @@ export { ISPBaseResponse, ISPPostRequest } from './SPFxHelper/Props/ISPBaseProps
 export { IDoc, IDocResponse, IUserProps } from './SPFxHelper/Props/ISPCommonProps';
 export { FieldScope, FieldType, IFieldGET, IFieldPOST } from './SPFxHelper/Props/ISPFieldProps';
 export { BaseTemplate, IListGET, IListItemResponse, IListPOST } from './SPFxHelper/Props/ISPListProps';
-export { errorType, ILogger, ILoggerResponse } from './SPFxHelper/Props/ISPLogProps';

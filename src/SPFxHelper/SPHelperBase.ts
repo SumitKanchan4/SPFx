@@ -6,7 +6,7 @@
  * Description: This class will contain only the core methods required for the SPOperations
  */
 
-import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions, SPHttpClientBatch, ISPHttpClientBatchCreationOptions } from '@microsoft/sp-http';
+import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from '@microsoft/sp-http';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
 import { SPHelperCommon } from './SPHelperCommon';
 
@@ -21,15 +21,15 @@ class SPHelperBase {
 
     private spHttpClient: SPHttpClient;
     private webURL: string;
-    private spBatchCreationOptions: ISPHttpClientBatchCreationOptions = { webUrl: this.webURL };
+    // private spBatchCreationOptions: ISPHttpClientBatchCreationOptions = { webUrl: this.webURL };
     protected errorStatus: number = -1;
 
     /**
      * Property to get the SPHttpClientBatch object
      */
-    protected get oSPBatch(): SPHttpClientBatch {
-        return this.spHttpClient.beginBatch(this.spBatchCreationOptions);
-    }
+    // protected get oSPBatch(): SPHttpClientBatch {
+    //     return this.spHttpClient.beginBatch(this.spBatchCreationOptions);
+    // }
 
     protected constructor(spHttpClient: SPHttpClient, webUrl: string) {
         this.spHttpClient = spHttpClient;
