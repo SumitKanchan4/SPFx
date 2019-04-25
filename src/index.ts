@@ -1,4 +1,3 @@
-export { SPBatchOperations } from './SPFxHelper/SPBatchOperations';
 export { SPCommonOperations } from './SPFxHelper/SPCommonOperations';
 export { SPFieldOperations } from './SPFxHelper/SPFieldOperations';
 export { SPHelperCommon } from './SPFxHelper/SPHelperCommon';

@@ -12,28 +12,25 @@ This npm package code is also available on [GitHub](https://github.com/SumitKanc
 This library is broken into different operations, so you only need to import the operations that you want to use. Below are the operations description:
 
 ### SPHelperBase 
->This is the base class and one cannot create object of this class. This class is responsible for the main interaction with SharePoint. This class is used internally from all the other classes. This class contains all the basic interaction methods with SharePoint.
+>*This is the base class and one cannot create object of this class. This class is responsible for the main interaction with SharePoint. This class is used internally from all the other classes. This class contains all the basic interaction methods with SharePoint*.
 
 ### SPListOperations 
->This is the main class for all the operations related to SharePoint lists. It has methods for all the operations like getListByTitle, getListItemsByQuery, createListItem etc..
+>*This is the main class for all the operations related to SharePoint lists. It has methods for all the operations like getListByTitle, getListItemsByQuery, createListItem etc..*
 
 ### SPFieldOperations
->This is the class responsible for the operations related to SharePoint Fields. It has methods like getFieldByList, addSiteColumnToList, createSiteColumn etc..
+>*This is the class responsible for the operations related to SharePoint Fields. It has methods like getFieldByList, addSiteColumnToList, createSiteColumn etc..*
 
 ### SPCommonOperations
->This class is provided to give the flexible to the developers/users to get the information for some queries for which method are not found in any of the classes.
+>*This class is provided to give the flexible to the developers/users to get the information for some queries for which method are not found in any of the classes.*
 
 ### SPHelperCommon
->This class contains only static methods and does not interact with the SharePoint. It contains some of the most common helper methods like isNull, stringIsNullOrEmpty etc..
+>*This class contains only static methods and does not interact with the SharePoint. It contains some of the most common helper methods like isNull, stringIsNullOrEmpty etc..*
+
 ### SPLogger
->This class can be used for the logging purpose. For using this you need to make some configuration manually
-Create a SharePoint List with the title: ‘Error Logs’
-Create Single line of text columns with the title
-Error Type (Choice field- ERROR, DEBUG, INFO)
-Error Description (Multiple line of text)
+>*This class can be used for the logging purpose. This class has been modified and implemented as per the API's provided by Microsoft. Now this library logs into the console*
 
 ### SPBatchOperations
->This class gives the flexibility to use the batch operations in SharePoint Framework.
+>*This class has been removed in the v2.0.0 as this has been depreciated by microsoft. I'll be implementing other ways to achieve the same in some time*
 
 # Installation
 To install the package you just need to write the following command in the node console
@@ -74,8 +71,10 @@ Below are the listing of all the methods available in the library
 | Method Name | README |
 | ------ | ------ |
 | getInstance | returns the instance of the class |
-|logError|logs the error in the SharePoint List|
-|logDebug|logs the debug info in the SharePoint list|
+|logError|logs the error in the developer console|
+|logInfo|logs Logs a general informational message|
+|logVerbose|Logs a message which contains detailed information that is generally only needed for troubleshooting|
+|logWarning|Logs a warning|
 |getListByTitle|returns the list by title|
 |createList|creates the list|
 |getListItemsByQuery|get the list items based on the query parameter|
@@ -120,5 +119,5 @@ Below are the listing of all the methods available in the library
 
 
 Happy Coding
-
+#SharePointWidgets #MicrosoftSharePoint
 Sumit Kanchan
