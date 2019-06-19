@@ -10,8 +10,6 @@ import { IListItemResponse, BaseTemplate } from './Props/ISPListProps';
  */
 class SPListOperations extends SPHelperBase {
 
-    private static instance: SPListOperations;
-
     private constructor(spHttpClient: SPHttpClient, webUrl: string) {
         super(spHttpClient, webUrl);
     }
@@ -19,10 +17,7 @@ class SPListOperations extends SPHelperBase {
     /** Use this method to get the SPListOperations class Object */
     public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPListOperations {
 
-        SPListOperations.instance = SPHelperCommon.isNull(SPListOperations.instance) ? new SPListOperations(spHttpClient, webUrl) : SPListOperations.instance;
-
-        return SPListOperations.instance;
-
+        return new SPListOperations(spHttpClient, webUrl);
     }
 
     /**
