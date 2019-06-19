@@ -12,6 +12,7 @@ import { SPHelperCommon } from './SPHelperCommon';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { IDoc, IDocResponse } from './Props/ISPCommonProps';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
+import { SPLogger } from './SPLogger';
 
 
 /**
@@ -19,7 +20,6 @@ import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
  */
 class SPCommonOperations extends SPHelperBase {
 
-    private static instance: SPCommonOperations;
     private docDetails: IDocResponse[] = [];
 
     constructor(spHttpClient: SPHttpClient, webUrl: string) {
@@ -29,10 +29,7 @@ class SPCommonOperations extends SPHelperBase {
     /** Use this method to get the SPCommonOperations class Object */
     public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPCommonOperations {
 
-        SPCommonOperations.instance = SPHelperCommon.isNull(SPCommonOperations.instance) ? new SPCommonOperations(spHttpClient, webUrl) : SPCommonOperations.instance;
-
-        return SPCommonOperations.instance;
-
+        return new SPCommonOperations(spHttpClient, webUrl);
     }
 
     /**
@@ -65,6 +62,7 @@ class SPCommonOperations extends SPHelperBase {
             }
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             this.docDetails.push(
                 {
                     ok: false,
@@ -126,7 +124,7 @@ class SPCommonOperations extends SPHelperBase {
 
                 return this.spQueryGET(url).then((response) => {
 
-                    if (response.ok &&  !SPHelperCommon.isNull(response.result)) {
+                    if (response.ok && !SPHelperCommon.isNull(response.result)) {
 
                         this.docDetails.push({
                             fileName: fileName,
@@ -162,6 +160,7 @@ class SPCommonOperations extends SPHelperBase {
                     }
                 });
             } catch (error) {
+                SPLogger.logError(error as Error);
                 this.docDetails.push(
                     {
                         ok: false,

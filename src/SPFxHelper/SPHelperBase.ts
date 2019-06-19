@@ -9,6 +9,7 @@
 import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from '@microsoft/sp-http';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
 import { SPHelperCommon } from './SPHelperCommon';
+import { SPLogger } from './SPLogger';
 
 
 /**
@@ -21,15 +22,7 @@ class SPHelperBase {
 
     private spHttpClient: SPHttpClient;
     private webURL: string;
-    // private spBatchCreationOptions: ISPHttpClientBatchCreationOptions = { webUrl: this.webURL };
     protected errorStatus: number = -1;
-
-    /**
-     * Property to get the SPHttpClientBatch object
-     */
-    // protected get oSPBatch(): SPHttpClientBatch {
-    //     return this.spHttpClient.beginBatch(this.spBatchCreationOptions);
-    // }
 
     protected constructor(spHttpClient: SPHttpClient, webUrl: string) {
         this.spHttpClient = spHttpClient;
@@ -71,6 +64,7 @@ class SPHelperBase {
                 });
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 ok: false,
                 result: error,
@@ -106,6 +100,7 @@ class SPHelperBase {
             });
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 ok: false,
                 result: error,
@@ -149,6 +144,7 @@ class SPHelperBase {
             });
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 ok: false,
                 result: error,
@@ -191,6 +187,7 @@ class SPHelperBase {
             });
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 ok: false,
                 result: error,
@@ -226,6 +223,7 @@ class SPHelperBase {
                 });
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 ok: false,
                 result: error,

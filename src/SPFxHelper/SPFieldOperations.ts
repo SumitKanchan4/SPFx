@@ -12,13 +12,12 @@ import { SPHelperCommon } from './SPHelperCommon';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { IFieldGET, IFieldPOST, FieldType, FieldScope } from './Props/ISPFieldProps';
 import { ISPBaseResponse } from './Props/ISPBaseProps';
+import { SPLogger } from './SPLogger';
 
 /**
  * This class will contain only the SPField specific methods
  */
 class SPFieldOperations extends SPHelperBase {
-
-    private static instance: SPFieldOperations;
 
     constructor(spHttpClient: SPHttpClient, webUrl: string, ) {
         super(spHttpClient, webUrl);
@@ -27,10 +26,7 @@ class SPFieldOperations extends SPHelperBase {
     /** Use this method to get the SPFieldOperations class Object */
     public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPFieldOperations {
 
-        SPFieldOperations.instance = SPHelperCommon.isNull(SPFieldOperations.instance) ? new SPFieldOperations(spHttpClient, webUrl) : SPFieldOperations.instance;
-
-        return SPFieldOperations.instance;
-
+        return new SPFieldOperations(spHttpClient, webUrl);
     }
 
     /**
@@ -74,6 +70,7 @@ class SPFieldOperations extends SPHelperBase {
             });
 
         } catch (error) {
+            SPLogger.logError(error as Error);
             Promise.resolve({
                 exists: false,
                 id: null,
@@ -125,6 +122,7 @@ class SPFieldOperations extends SPHelperBase {
                 return Promise.resolve(field);
             });
         } catch (error) {
+            SPLogger.logError(error as Error);
             Promise.resolve({
                 exists: false,
                 id: null,
@@ -161,6 +159,7 @@ class SPFieldOperations extends SPHelperBase {
                 return Promise.resolve(fields);
             });
         } catch (error) {
+            SPLogger.logError(error as Error);
             Promise.resolve({
                 errorMethod: 'SPFieldOperations.getFieldsByView',
                 ok: false,
@@ -194,6 +193,7 @@ class SPFieldOperations extends SPHelperBase {
                 return Promise.resolve(fields);
             });
         } catch (error) {
+            SPLogger.logError(error as Error);
             Promise.resolve({
                 errorMethod: 'SPFieldOperations.getFieldsByView',
                 ok: false,
@@ -247,6 +247,7 @@ class SPFieldOperations extends SPHelperBase {
                 return Promise.resolve(field);
             });
         } catch (error) {
+            SPLogger.logError(error as Error);
             Promise.resolve({
                 exists: false,
                 id: null,
@@ -305,6 +306,7 @@ class SPFieldOperations extends SPHelperBase {
                 }
             });
         } catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 exists: false,
                 id: null,
@@ -372,6 +374,7 @@ class SPFieldOperations extends SPHelperBase {
             }
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 exists: false,
                 id: null,
@@ -428,7 +431,7 @@ class SPFieldOperations extends SPHelperBase {
             });
         }
         catch (error) {
-
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 exists: false,
                 id: null,
@@ -525,6 +528,7 @@ class SPFieldOperations extends SPHelperBase {
             }
         }
         catch (error) {
+            SPLogger.logError(error as Error);
             return Promise.resolve({
                 exists: false,
                 id: null,
