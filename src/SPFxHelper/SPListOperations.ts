@@ -4,20 +4,20 @@ import { IListGET, IListPOST } from './Props/ISPListProps';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
 import { IListItemResponse, BaseTemplate } from './Props/ISPListProps';
+import { Log } from '@microsoft/sp-core-library';
 
 /**
  * This class will contain only the List-Library specific methods required for the SPOperations
  */
 class SPListOperations extends SPHelperBase {
 
-    private constructor(spHttpClient: SPHttpClient, webUrl: string) {
-        super(spHttpClient, webUrl);
+    constructor(spHttpClient: SPHttpClient, webUrl: string, logSource?: string) {
+        super(spHttpClient, webUrl, logSource);
     }
 
-    /** Use this method to get the SPListOperations class Object */
-    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPListOperations {
-
-        return new SPListOperations(spHttpClient, webUrl);
+    /** This method is obsolete, please use new to get the object */
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string, logSource?: string): SPListOperations {
+        return new SPListOperations(spHttpClient, webUrl, logSource);
     }
 
     /**
@@ -26,33 +26,32 @@ class SPListOperations extends SPHelperBase {
      * This will check the list existence only in current web.
      * @param lstTitle : Provide the title of the list
      */
-    public getListByTitle(lstTitle: string): Promise<IListGET> {
+    public async getListByTitle(lstTitle: string): Promise<IListGET> {
+
+        let listDetails: IListGET = undefined;
+
         try {
             var query: string = `${this.WebUrl}/_api/web/lists?$filter=Title eq '${lstTitle}'`;
 
-            return this.spQueryGET(query).then((response) => {
+            let response: ISPBaseResponse = await this.spQueryGET(query);
 
-                var listDetails: IListGET = {
+            if (response) {
+                listDetails = {
                     ok: response.ok,
                     status: response.status,
                     statusText: response.statusText,
                     exists: response.result.value.length > 0 ? true : false,
                     details: response.result.value.length > 0 ? response.result.value[0] : null,
-                    errorMethod: response.errorMethod
+                    errorMethod: ``
                 };
-
-                return Promise.resolve(listDetails);
-            });
+            }
         }
         catch (error) {
-            return Promise.resolve({
-                ok: false,
-                status: this.errorStatus,
-                statusText: error.message,
-                exists: false,
-                details: null,
-                errorMethod: 'SPListOperations.getListByTitle'
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPListOperations.getListByTitle() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(listDetails);
         }
     }
 

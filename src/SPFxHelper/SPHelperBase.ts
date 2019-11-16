@@ -2,14 +2,13 @@
  * Created By: Sumit Kanchan
  * Created on: 1 May 2017
  * Modified By: Sumit Kanchan
- * Modified on: 1 May 2017
+ * Modified on: 16 November 2019
  * Description: This class will contain only the core methods required for the SPOperations
  */
 
 import { SPHttpClient, SPHttpClientResponse, ISPHttpClientOptions } from '@microsoft/sp-http';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
-import { SPHelperCommon } from './SPHelperCommon';
-import { SPLogger } from './SPLogger';
+import { Log } from '@microsoft/sp-core-library';
 
 
 /**
@@ -23,10 +22,12 @@ class SPHelperBase {
     private spHttpClient: SPHttpClient;
     private webURL: string;
     protected errorStatus: number = -1;
+    protected LOG_SOURCE: string = `SPFxHelper`;
 
-    protected constructor(spHttpClient: SPHttpClient, webUrl: string) {
+    protected constructor(spHttpClient: SPHttpClient, webUrl: string, logSource?: string) {
         this.spHttpClient = spHttpClient;
         this.webURL = webUrl;
+        this.LOG_SOURCE = logSource ? logSource : this.LOG_SOURCE;
     }
 
     /** return the web url */
@@ -38,40 +39,28 @@ class SPHelperBase {
      * Call this method to execute GET query.
      * Returns false if query fails else returns the response
     */
-    protected spQueryGET(query: string): Promise<ISPBaseResponse> {
+    protected async spQueryGET(query: string): Promise<ISPBaseResponse> {
+
+        let retValue: ISPBaseResponse = undefined;
         try {
-            return this.spHttpClient.get(query,
-                SPHttpClient.configurations.v1,
-                {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'odata-version': ''
-                    }
-                }).then((response: SPHttpClientResponse) => {
 
-                    return response.json().then((item) => {
-                        var custmResponse: ISPBaseResponse = {
-                            ok: response.ok,
-                            result: item,
-                            status: response.status,
-                            statusText: response.statusText,
-                            errorMethod: 'SPHelperBase.spQueryGET',
-                            responseJSON: JSON.stringify(item)
-                        };
-
-                        return custmResponse;
-                    });
-                });
+            let response: SPHttpClientResponse = await this.spHttpClient.get(query, SPHttpClient.configurations.v1);
+            let responseParsed: ISPBaseResponse = await response.json();
+            retValue = {
+                ok: response.ok,
+                result: responseParsed,
+                status: response.status,
+                statusText: response.statusText,
+                errorMethod: ``,
+                responseJSON: response.status === 200 ? `` : JSON.stringify(responseParsed)
+            }
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPHelperBase.spQueryGET'
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPHelperBase.spQueryGET() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(retValue);
         }
     }
 
@@ -79,36 +68,24 @@ class SPHelperBase {
      * Call this method to execute POST query.
      * Returns false if query fails else returns the response
     */
-    protected spQueryPOST(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+    protected async spQueryPOST(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+
+        let retValue: ISPBaseResponse = undefined;
 
         try {
-            var options: ISPHttpClientOptions = {};
+            let options: ISPHttpClientOptions = {
+                headers: { 'odata-version': '3.0' },
+                body: postProps.body
+            };
 
-            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
-                options = {
-                    headers: { 'odata-version': '3.0' },
-                    body: postProps.body
-                };
-            }
-            else {
-                options = {
-                    headers: { 'odata-version': '3.0' },
-                };
-            }
-            return this.executePOSTRequest(postProps.url, options).then((postResponse) => {
-                return postResponse;
-            });
+            retValue = await this.executePOSTRequest(postProps.url, options);
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPHelperBase.spQueryPOST',
-                responseJSON: JSON.stringify(error)
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPHelperBase.spQueryPOST() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(retValue);
         }
     }
 
@@ -116,42 +93,30 @@ class SPHelperBase {
      * Call this method to execute MERGE query.
      * Returns false if query fails else returns the response
     */
-    protected spQueryMERGE(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+    protected async spQueryMERGE(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+
+        let retValue: ISPBaseResponse = undefined;
 
         try {
-            var options: ISPHttpClientOptions = {};
+            let options: ISPHttpClientOptions = {
+                headers: {
+                    'Accept': 'application/json;odata=nometadata',
+                    'Content-type': 'application/json;odata=verbose',
+                    'odata-version': '',
+                    'IF-MATCH': '*',
+                    'X-HTTP-Method': 'MERGE'
+                },
+                body: postProps.body
+            };
 
-            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
-                options = {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': '',
-                        'IF-MATCH': '*',
-                        'X-HTTP-Method': 'MERGE'
-                    },
-                    body: postProps.body
-                };
-            }
-            else {
-                options = {
-                    headers: { 'odata-version': '3.0' },
-                };
-            }
-
-            return this.executePOSTRequest(postProps.url, options).then((mergeResponse) => {
-                return mergeResponse;
-            });
+            retValue = await this.executePOSTRequest(postProps.url, options);
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPHelperBase.spQueryMERGE'
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPHelperBase.spQueryMERGE() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(retValue);
         }
     }
 
@@ -159,79 +124,59 @@ class SPHelperBase {
      * Call this method to execute PATCH query.
      * Returns false if query fails else returns the response
     */
-    protected spQueryPATCH(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+    protected async spQueryPATCH(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+
+        let retValue: ISPBaseResponse = undefined;
 
         try {
-            var options: ISPHttpClientOptions = {};
+            let options: ISPHttpClientOptions = {
+                headers: {
+                    'Accept': 'application/json;odata=nometadata',
+                    'Content-type': 'application/json;odata=verbose',
+                    'odata-version': '',
+                    'IF-MATCH': '*',
+                    'X-HTTP-Method': 'PATCH'
+                },
+                body: postProps.body
+            };
 
-            if (!SPHelperCommon.isStringNullOrEmpty(postProps.body)) {
-                options = {
-                    headers: {
-                        'Accept': 'application/json;odata=nometadata',
-                        'Content-type': 'application/json;odata=verbose',
-                        'odata-version': '',
-                        'IF-MATCH': '*',
-                        'X-HTTP-Method': 'PATCH'
-                    },
-                    body: postProps.body
-                };
-            }
-            else {
-                options = {
-                    headers: { 'odata-version': '3.0' },
-                };
-            }
-
-            return this.executePOSTRequest(postProps.url, options).then((patchResponse) => {
-                return patchResponse;
-            });
+            retValue = await this.executePOSTRequest(postProps.url, options);
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPHelperBase.spQueryPATCH',
-                responseJSON: JSON.stringify(error)
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPHelperBase.spQueryPATCH() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(retValue);
         }
     }
 
     /** 
      * Executes the POST request for the POST/MERGE/PATCH
      */
-    private executePOSTRequest(url: string, options: ISPHttpClientOptions): Promise<ISPBaseResponse> {
+    private async executePOSTRequest(url: string, options: ISPHttpClientOptions): Promise<ISPBaseResponse> {
+
+        let retValue: ISPBaseResponse = undefined;
+
         try {
 
-            return this.spHttpClient.post(url, SPHttpClient.configurations.v1, options)
-                .then((response: SPHttpClientResponse) => {
-
-                    return response.json().then((item) => {
-                        var custmResponse: ISPBaseResponse = {
-                            ok: response.ok,
-                            result: item,
-                            status: response.status,
-                            statusText: response.statusText,
-                            errorMethod: 'SPHelperBase.executePOSTRequest',
-                            responseJSON: JSON.stringify(item)
-                        };
-
-                        return custmResponse;
-                    });
-                });
+            let response: SPHttpClientResponse = await this.spHttpClient.post(url, SPHttpClient.configurations.v1, options);
+            let responseParsed: ISPBaseResponse = await response.json();
+            retValue = {
+                ok: response.ok,
+                result: responseParsed,
+                status: response.status,
+                statusText: response.statusText,
+                errorMethod: ``,
+                responseJSON: response.status === 200 ? `` : JSON.stringify(responseParsed)
+            }
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPHelperBase.executePOSTRequest',
-                responseJSON: JSON.stringify(error)
-            });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPHelperBase.executePOSTRequest() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
+            return Promise.resolve(retValue);
         }
     }
 }

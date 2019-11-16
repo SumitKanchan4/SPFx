@@ -13,68 +13,43 @@ import { SPHttpClient } from '@microsoft/sp-http';
 import { IDoc, IDocResponse } from './Props/ISPCommonProps';
 import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
 import { SPLogger } from './SPLogger';
+import { Log } from '@microsoft/sp-core-library';
 
 
 /**
- * This class will contain only the miscrelaneous methods required for the SPOperations
+ * This class will contain only the miscelaneous methods required for the SPOperations
  */
 class SPCommonOperations extends SPHelperBase {
 
     private docDetails: IDocResponse[] = [];
 
-    constructor(spHttpClient: SPHttpClient, webUrl: string) {
-        super(spHttpClient, webUrl);
+    constructor(spHttpClient: SPHttpClient, webUrl: string, logSource?: string) {
+        super(spHttpClient, webUrl, logSource);
     }
 
     /** Use this method to get the SPCommonOperations class Object */
-    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPCommonOperations {
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string, logSource?: string): SPCommonOperations {
 
-        return new SPCommonOperations(spHttpClient, webUrl);
+        return new SPCommonOperations(spHttpClient, webUrl, logSource);
     }
 
     /**
      * Method returns the SharePoint default icons for each file type
      * @param fileNames : array of files for which icons are required
      */
-    public getDocIconByFiles(files: IDoc[]): Promise<IDocResponse[]> {
+    public async getDocIconByFiles(files: IDoc[]): Promise<IDocResponse[]> {
         this.docDetails = [];
         try {
 
-            if (!SPHelperCommon.isNull(files) && files.length > 0) {
-                return this.getIcons(files).then(() => {
-                    return Promise.resolve(this.docDetails);
-                });
-            }
-            else {
-                this.docDetails.push(
-                    {
-                        ok: false,
-                        status: this.errorStatus,
-                        statusText: 'files array cannot be empty',
-                        image: null,
-                        fileName: null,
-                        fileUrl: null,
-                        id: null,
-                        success: false,
-                        errorMethod: 'SPCommonOperations.getDocIconByFileName'
-                    });
-                return Promise.resolve(this.docDetails);
+            if (files && files.length > 0) {
+                this.docDetails = await this.getIcons(files);
             }
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            this.docDetails.push(
-                {
-                    ok: false,
-                    status: this.errorStatus,
-                    statusText: `Recieved Props:${JSON.stringify(files)} : Error: ${error.message}`,
-                    image: null,
-                    fileName: null,
-                    id: null,
-                    success: false,
-                    fileUrl: null,
-                    errorMethod: 'SPCommonOperations.getDocIconByFileName'
-                });
+            Log.error(this.LOG_SOURCE, new Error(`Error occured in SPCommonOperations.getDocIconByFiles() method`));
+            Log.error(this.LOG_SOURCE, error);
+        }
+        finally {
             return Promise.resolve(this.docDetails);
         }
     }
@@ -84,12 +59,12 @@ class SPCommonOperations extends SPHelperBase {
      * Method is recursive in nature so made this private
      * @param fileNames : Filenames of which icon is needed
      */
-    private getIcons(files: IDoc[]): Promise<IDocResponse[]> {
+    private async getIcons(files: IDoc[]): Promise<IDocResponse[]> {
 
-        var fileName: string;
-        var file: IDoc = files.pop();
+        let fileName: string = undefined;
+        let file: IDoc = files.pop();
 
-        if (!SPHelperCommon.isStringNullOrEmpty(file.fileName)) {
+        if (file.fileName) {
             fileName = file.fileName;
         }
         // Get the fileName from file url
@@ -182,40 +157,32 @@ class SPCommonOperations extends SPHelperBase {
      * Method gives access to query GET 
      * @param url : query URL
      */
-    public queryGETResquest(url: string): Promise<ISPBaseResponse> {
-        return this.spQueryGET(url).then((response) => {
-            return response;
-        });
+    public async queryGETResquest(url: string): Promise<ISPBaseResponse> {
+        return await this.spQueryGET(url);
     }
 
     /**
      * Method gives access to query POST
      * @param postProps : ISPPostRequest object
      */
-    public queryPOSTRequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
-        return this.spQueryPOST(postProps).then((response) => {
-            return response;
-        });
+    public async queryPOSTRequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+        return await this.spQueryPOST(postProps);
     }
 
     /**
      * Method gives access to query MERGE
      * @param postProps : ISPPostRequest object
      */
-    public queryMERGERequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
-        return this.spQueryMERGE(postProps).then((response) => {
-            return response;
-        });
+    public async queryMERGERequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+        return await this.spQueryMERGE(postProps);
     }
 
     /**
      * Method gives access to query PATCH
      * @param postProps : ISPPostRequest object
      */
-    public queryPATCHRequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
-        return this.spQueryPATCH(postProps).then((response) => {
-            return response;
-        });
+    public async queryPATCHRequest(postProps: ISPPostRequest): Promise<ISPBaseResponse> {
+        return await this.spQueryPATCH(postProps);
     }
 }
 

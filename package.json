@@ -6,9 +6,9 @@
   "typings": "dist/index.d.ts",
   "dependencies": {
     "@microsoft/sp-client-base": "~1.0.0",
-    "@microsoft/sp-core-library": "^1.8.1",
-    "@microsoft/sp-http": "^1.8.1",
-    "@microsoft/sp-odata-types": "^1.8.1"
+    "@microsoft/sp-core-library": "1.9.1",
+    "@microsoft/sp-http": "1.9.1",
+    "@microsoft/sp-odata-types": "1.9.1"
   },
   "deprecated": false,
   "devDependencies": {
