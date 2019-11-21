@@ -20,7 +20,7 @@ interface IListGET {
     statusText: string;
 
     /** Method name to log where error occured */
-    errorMethod: string;
+    errorMethod?: string;
 }
 
 /**

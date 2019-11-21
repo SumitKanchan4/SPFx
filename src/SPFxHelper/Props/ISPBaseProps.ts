@@ -3,7 +3,7 @@ interface ISPBaseResponse {
     status: number;
     statusText: string;
     result: any;
-    errorMethod: string;
+    errorMethod?: string;
     responseJSON?: string;
 }
 

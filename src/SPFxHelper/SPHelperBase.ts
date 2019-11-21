@@ -51,7 +51,6 @@ class SPHelperBase {
                 result: responseParsed,
                 status: response.status,
                 statusText: response.statusText,
-                errorMethod: ``,
                 responseJSON: response.status === 200 ? `` : JSON.stringify(responseParsed)
             }
         }
@@ -167,7 +166,6 @@ class SPHelperBase {
                 result: responseParsed,
                 status: response.status,
                 statusText: response.statusText,
-                errorMethod: ``,
                 responseJSON: response.status === 200 ? `` : JSON.stringify(responseParsed)
             }
         }

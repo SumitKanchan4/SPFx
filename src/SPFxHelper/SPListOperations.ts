@@ -22,8 +22,7 @@ class SPListOperations extends SPHelperBase {
 
     /**
      * Method returns the list details if exists. 
-     * Check property exists to check if list exists or not.
-     * This will check the list existence only in current web.
+     * Check property exists to check if list exists or not
      * @param lstTitle : Provide the title of the list
      */
     public async getListByTitle(lstTitle: string): Promise<IListGET> {
@@ -35,14 +34,13 @@ class SPListOperations extends SPHelperBase {
 
             let response: ISPBaseResponse = await this.spQueryGET(query);
 
-            if (response) {
+            if (response && response.result && response.result["value"]) {
                 listDetails = {
                     ok: response.ok,
                     status: response.status,
                     statusText: response.statusText,
                     exists: response.result.value.length > 0 ? true : false,
-                    details: response.result.value.length > 0 ? response.result.value[0] : null,
-                    errorMethod: ``
+                    details: response.result.value.length > 0 ? response.result.value[0] : null
                 };
             }
         }
@@ -60,13 +58,22 @@ class SPListOperations extends SPHelperBase {
      *  else creates the list based on the base template and the properties defined.
      * @param lstDetail : Details of the list 
      */
-    public createList(lstDetail: IListPOST): Promise<IListGET> {
+    public async createList(lstDetail: IListPOST): Promise<IListGET> {
 
         if (!SPHelperCommon.isNull(lstDetail)) {
 
             try {
 
                 // Check if the list/library exists
+                let listResponse: IListGET = await this.getListByTitle(lstDetail.title);
+
+                if (listResponse && listResponse.exists && listResponse.details.BaseTemplate == lstDetail.baseTemplate) {
+                    return Promise.resolve(listResponse);
+                }
+                else {
+
+                }
+
                 return this.getListByTitle(lstDetail.title).then((lstResponse) => {
 
                     // Check if the query executes successfully
