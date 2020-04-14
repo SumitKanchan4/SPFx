@@ -1,23 +1,26 @@
-import { SPHelperBase } from './SPHelperBase';
-import { SPHelperCommon } from './SPHelperCommon';
-import { IListGET, IListPOST } from './Props/ISPListProps';
+import { SPBase } from './SPBase';
+import { IListGET, IListPOST, IListItemResponse, IItem } from './Props/ISPListProps';
 import { SPHttpClient } from '@microsoft/sp-http';
-import { ISPBaseResponse, ISPPostRequest } from './Props/ISPBaseProps';
-import { IListItemResponse, BaseTemplate } from './Props/ISPListProps';
+import { ISPPostRequest, ISPBaseResponse } from './Props/ISPBaseProps';
+import { IListItemsResponse, BaseTemplate } from './Props/ISPListProps';
+import { Log } from '@microsoft/sp-core-library';
+import { SPCore } from './SPCore';
 
+const CLASS_NAME: string = `SPListOperations`;
+// const CLASS_NAME: string = `SPListOperations`;
 /**
  * This class will contain only the List-Library specific methods required for the SPOperations
  */
-class SPListOperations extends SPHelperBase {
+class SPListOperations extends SPBase {
 
-    private constructor(spHttpClient: SPHttpClient, webUrl: string) {
-        super(spHttpClient, webUrl);
+    constructor(spHttpClient: SPHttpClient, webUrl: string, logSource: string) {
+        super(spHttpClient, webUrl, logSource);
     }
 
     /** Use this method to get the SPListOperations class Object */
-    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPListOperations {
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string, logSource: string): SPListOperations {
 
-        return new SPListOperations(spHttpClient, webUrl);
+        return new SPListOperations(spHttpClient, webUrl, logSource);
     }
 
     /**
@@ -26,33 +29,34 @@ class SPListOperations extends SPHelperBase {
      * This will check the list existence only in current web.
      * @param lstTitle : Provide the title of the list
      */
-    public getListByTitle(lstTitle: string): Promise<IListGET> {
+    public async getListByTitle(lstTitle: string): Promise<IListGET> {
+
+        // if list title is blank, return with error
+        if (SPCore.isEmptyString(lstTitle)) { return Promise.resolve({ exists: false, ok: false, error: new Error(`List Title cannot be blank`) }); }
+
+        let result: IListGET;
+
         try {
-            var query: string = `${this.WebUrl}/_api/web/lists?$filter=Title eq '${lstTitle}'`;
+            // Create query
+            let query: string = `${this.WebUrl}/_api/web/lists/getByTitle('${lstTitle}')`;
+            // get the response based
+            let response: ISPBaseResponse = await this.spQueryGET(query);
 
-            return this.spQueryGET(query).then((response) => {
-
-                var listDetails: IListGET = {
-                    ok: response.ok,
-                    status: response.status,
-                    statusText: response.statusText,
-                    exists: response.result.value.length > 0 ? true : false,
-                    details: response.result.value.length > 0 ? response.result.value[0] : null,
-                    errorMethod: response.errorMethod
-                };
-
-                return Promise.resolve(listDetails);
-            });
+            if (response.ok) {
+                result = { exists: !!response.result, ok: true, details: response.result };
+            }
+            else {
+                // Set ok,error if the 404 is found in error
+                result = { exists: false, ok: false, error: response.error };
+            }
         }
         catch (error) {
-            return Promise.resolve({
-                ok: false,
-                status: this.errorStatus,
-                statusText: error.message,
-                exists: false,
-                details: null,
-                errorMethod: 'SPListOperations.getListByTitle'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListByTitle`));
+            Log.error(this.LogSource, error);
+            result = { exists: false, ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -61,55 +65,38 @@ class SPListOperations extends SPHelperBase {
      *  else creates the list based on the base template and the properties defined.
      * @param lstDetail : Details of the list 
      */
-    public createList(lstDetail: IListPOST): Promise<IListGET> {
+    public async createList(lstDetail: IListPOST): Promise<IListGET> {
 
-        if (!SPHelperCommon.isNull(lstDetail)) {
+        // Return the response if the object is null
+        if (!lstDetail) { return Promise.resolve({ exists: false, ok: false, error: new Error(`List detail object cannot be null`) }); }
 
-            try {
+        let result: IListGET;
 
-                // Check if the list/library exists
-                return this.getListByTitle(lstDetail.title).then((lstResponse) => {
-
-                    // Check if the query executes successfully
-                    if (lstResponse.ok) {
-
-                        // Checking if list exists with the same base template and title then return the list details else create and then return the list details
-                        if (lstResponse.exists && lstResponse.details.BaseTemplate == lstDetail.baseTemplate) {
-                            return lstResponse;
-                        }
-                        else {
-                            return this.spQueryPOST(this.getListMetadata(lstDetail, this.WebUrl)).then((lstCreateResp) => {
-
-                                var listDetails: IListGET = {
-                                    ok: lstCreateResp.ok,
-                                    status: lstCreateResp.status,
-                                    statusText: lstCreateResp.statusText,
-                                    exists: lstCreateResp.result.value.length > 0 ? true : false,
-                                    details: lstCreateResp.result.value.length > 0 ? lstCreateResp.result.value[0] : null,
-                                    errorMethod: 'SPListOperations.createList'
-                                };
-
-                                return Promise.resolve(listDetails);
-                            });
-                        }
-
-                    }
-                    else {
-                        // return the response as it is to track the error
-                        return (lstResponse);
-                    }
-                });
+        try {
+            // Check if the list with the same title exists
+            Log.verbose(this.LogSource, `Check if the list with the same title exists`);
+            let lst: IListGET = await this.getListByTitle(lstDetail.title);
+            if (lst.exists && lst.details["BaseTemplate"] === lstDetail.baseTemplate) {
+                Log.verbose(this.LogSource, `List exists with same title and base template, so not created new`);
+                result = lst;
             }
-            catch (error) {
-                return Promise.resolve({
-                    ok: false,
-                    status: this.errorStatus,
-                    statusText: error.message,
-                    exists: false,
-                    details: null,
-                    errorMethod: 'SPListOperations.createList'
-                });
+            else {
+                let createdList = await this.spQueryPOST(this.getListMetadata(lstDetail));
+                if (createdList.ok) {
+                    result = { ok: true, exists: true, details: createdList["result"] };
+                }
+                else {
+                    result = { exists: false, ok: false, error: createdList.error };
+                }
             }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createList`));
+            Log.error(this.LogSource, error);
+            result = { exists: false, ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -118,23 +105,9 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : Title of the list from where  data is required
      * @param query : Query to filter the results. Include '?' in the start.
      */
-    public getListItemsByQuery(listTitle: string, query: string): Promise<IListItemResponse> {
+    public async getListItemsByQuery(listTitle: string, query: string): Promise<IListItemsResponse> {
 
-        try {
-            return this.getListItemsBase(listTitle, query).then((response) => {
-                return response;
-            });
-        }
-        catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.getListItemsByQuery',
-                responseJSON: JSON.stringify(error)
-            });
-        }
+        return await this.getListItemsBase(listTitle, query);
     }
 
     /**
@@ -142,33 +115,28 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : Title of the list from where  data is required
      * @param query : Query srtarting from '?' if any
      */
-    private getListItemsBase(listTitle: string, query?: string): Promise<IListItemResponse> {
+    private async getListItemsBase(listTitle: string, query?: string): Promise<IListItemsResponse> {
 
+        let result: IListItemsResponse;
         try {
-            var url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/Items`;
-            url = SPHelperCommon.isStringNullOrEmpty(query) ? url : `${url}${query}`;
+            let url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/Items`;
+            url = SPCore.isEmptyString(query) ? url : `${url}${query}`;
 
-            return this.spQueryGET(url).then((response) => {
-                var itemsResponse: IListItemResponse = {
-                    errorMethod: 'SPListOperations.getListItems',
-                    ok: response.ok,
-                    result: SPHelperCommon.isNull(response.result) ? null : response.result.value,
-                    status: response.status,
-                    statusText: response.statusText,
-                    responseJSON: (SPHelperCommon.isNull(response.result) || SPHelperCommon.isNull(response.result.value)) ? JSON.stringify(response) : null
-                };
-                return Promise.resolve(itemsResponse);
-            });
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            if (response.ok) {
+                result = { ok: true, result: response.result.value, nextLink: !!response.result["odata.nextLink"] ? response.result["odata.nextLink"] : undefined };
+            }
+            else {
+                result = { ok: false, error: response.error };
+            }
         }
         catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.getListItems',
-                responseJSON: JSON.stringify(error)
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListItemsBase`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -177,25 +145,19 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : Title of the list from where  data is required
      * @param itemID : ID of the item
      */
-    public getListItemByID(listTitle: string, itemID: string): Promise<IListItemResponse> {
+    public async getListItemByID(listTitle: string, itemID: string): Promise<IListItemResponse> {
 
-        try {
-            var query = `(${itemID})`;
+        let result: IListItemResponse = { ok: false };
+        let response: IListItemsResponse = await this.getListItemsBase(listTitle, `(${itemID})`);
 
-            return this.getListItemsBase(listTitle, query).then((response) => {
-                return response;
-            });
+        result.ok = response.ok;
+        result.error = response.error;
+
+        if (result.ok) {
+            result.result = response.result && response.result.length > 0 ? response.result[0] : undefined;
         }
-        catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.getListItemByID',
-                responseJSON: JSON.stringify(error)
-            });
-        }
+
+        return Promise.resolve(result);
     }
 
     /**
@@ -203,24 +165,10 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : List title
      * @param rowCount : number of rows to return. Define 0 to get default max rows
      */
-    public getListItems(listTitle: string, rowCount: number): Promise<IListItemResponse> {
+    public async getListItems(listTitle: string, rowCount: number): Promise<IListItemsResponse> {
 
-        try {
-            var query = rowCount > 0 ? `?$top=${rowCount}` : null;
-            return this.getListItemsBase(listTitle, query).then((response) => {
-                return response;
-            });
-        }
-        catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.getListItems',
-                responseJSON: JSON.stringify(error)
-            });
-        }
+        let query = rowCount && rowCount > 0 ? `?$top=${rowCount}` : undefined;
+        return await this.getListItemsBase(listTitle, query);
     }
 
     /**
@@ -228,48 +176,61 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : Title of the list where item needs to be created
      * @param body : Body of the item 
      */
-    public createListItem(listTitle: string, body: string): Promise<ISPBaseResponse> {
+    public async createListItem(listTitle: string, itemValues: IItem[]): Promise<IListItemResponse> {
+
+        let result: IListItemResponse = { ok: false };
         try {
 
-            return this.spQueryPOST({
-                body: body,
-                url: `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items`
-            }).then((response) => {
-                return response;
-            });
+            let listProps: IListGET = await this.getListByTitle(listTitle);
+
+            if (listProps.exists) {
+                let body = {
+                    __metadata: {
+                        'type': `${listProps.details.ListItemEntityTypeFullName}`
+                    }
+                };
+
+                itemValues.forEach(i => {
+                    body[`${i.fieldName}`] = i.fieldValue;
+                });
+
+                let response: ISPBaseResponse = await this.spQueryPOST({ body: JSON.stringify(body), url: `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items` });
+                result = { ok: response.ok, error: response.error, result: response.result };
+            }
+            else {
+                result.error = listProps.error;
+                result.ok = listProps.ok;
+            }
 
         } catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.createListItem'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createListItem`));
+            Log.error(this.LogSource, error);
+            result.error = error;
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
     /**
      * Creates the folder in the document library
-     * @param docLib : Title of the document Library where folder needs to be created
-     * @param folderName : Folder name in the format:DocLib/FolderName
+     * @param docLib : Title of the document Library (Internal name and not the title) where folder needs to be created
+     * @param folderName : Folder name
      */
-    public createFolderInDocLib(docLib: string, folderName: string): Promise<ISPBaseResponse> {
+    public async createFolderInDocLib(docLib: string, folderName: string): Promise<IListItemResponse> {
+
+        let result: IListItemResponse = { ok: false };
         try {
-            return this.spQueryPOST({
-                body: null,
-                url: `${this.WebUrl}/_api/web/folders/add('${docLib}/${folderName}')`
-            }).then((response) => {
-                return response;
-            });
-        } catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.createFolderInDocLib'
-            });
+            let response: ISPBaseResponse = await this.spQueryPOST({ body: undefined, url: `${this.WebUrl}/_api/web/folders/add('${docLib}/${folderName}')` });
+            result = { error: response.error, ok: response.ok, result: response.result };
+        } 
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createFolderInDocLib`));
+            Log.error(this.LogSource, error);
+            result.error = error;
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -278,77 +239,40 @@ class SPListOperations extends SPHelperBase {
      * @param listTitle : Title fo the list where folder needs to be created
      * @param folderName : Name of the folder needs to be created
      */
-    public createFolderInList(listTitle: string, folderName: string): Promise<ISPBaseResponse> {
+    public async createFolderInList(listTitle: string, folderName: string): Promise<IListItemResponse> {
+
+        let result: IListItemResponse;
         try {
 
-            return this.getListByTitle(listTitle).then((lstDetails) => {
+            let item: IItem[] = [
+                { fieldName: 'Title', fieldValue: `${folderName}` },
+                { fieldName: 'FileLeafRef', fieldValue: `${folderName}` },
+                { fieldName: 'FileSystemObjectType', fieldValue: '1' },
+                { fieldName: 'ContentTypeId', fieldValue: '0x0120' },
+            ];
 
-                // Check if the list exists and query executed successfully
-                if (lstDetails.ok && lstDetails.exists) {
+            result = await this.createListItem(listTitle, item);
 
-                    var body: string = JSON.stringify({
-                        "__metadata": { type: `${lstDetails.details.ListItemEntityTypeFullName}` },
-                        Title: `${folderName}`,
-                        FileLeafRef: `${folderName}`,
-                        FileSystemObjectType: `1`,
-                        ContentTypeId: "0x0120"
-                    });
+            if (result.ok) {
+                let body: string = JSON.stringify({
+                    '__metadata': {
+                        'type': `${result.result["odata.type"]}`
+                    },
+                    'Title': `${folderName}`,
+                    'FileLeafRef': `${folderName}`
+                });
 
-                    return this.createListItem(listTitle, body).then((response) => {
-
-                        // Check if the response is ok and response contains the required data
-                        if (response.ok && !SPHelperCommon.isNull(response.result.Id)) {
-
-                            var itemId: string = response.result.Id;
-
-                            body = JSON.stringify({
-                                '__metadata': {
-                                    'type': `${lstDetails.details.ListItemEntityTypeFullName}`
-                                },
-                                'Title': `${folderName}`,
-                                'FileLeafRef': `${folderName}`
-                            });
-
-                            var urlPOST = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items(${itemId})`;
-
-                            // IF the folders are allowed to be created it will patch the item and will show them as folder
-                            this.spQueryPATCH({ body: body, url: urlPOST });
-
-                            return Promise.resolve(response);
-                        }
-                        else {
-                            return Promise.resolve({
-                                ok: false,
-                                result: { error: JSON.stringify(response.result) },
-                                status: this.errorStatus,
-                                statusText: `Error creating item in List: ${listTitle}`,
-                                errorMethod: 'SPListOperations.createFolderInList',
-                                responseJSON: JSON.stringify(response)
-                            });
-                        }
-                    });
-                }
-                else {
-                    return Promise.resolve({
-                        ok: false,
-                        result: { error: `Invalid List name: ${listTitle}` },
-                        status: this.errorStatus,
-                        statusText: `Invalid List name: ${listTitle}`,
-                        errorMethod: 'SPListOperations.createFolderInList',
-                        responseJSON: JSON.stringify(lstDetails)
-                    });
-                }
-            });
-
+                let urlPOST = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items(${result.result["Id"]})`;
+                this.spQueryPATCH({ body: body, url: urlPOST });
+            }
         }
         catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.createFolderInList'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createFolderInList`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -358,22 +282,37 @@ class SPListOperations extends SPHelperBase {
      * @param itemId : ID of the item which needs to be updated
      * @param body : Body template of the item which needs to be updated
      */
-    public updateListItem(listTitle: string, itemId: string, body: string): Promise<ISPBaseResponse> {
-        try {
-            var urlPOST = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items(${itemId})`;
+    public async updateListItem(listTitle: string, itemId: string, itemValues: IItem[]): Promise<IListItemResponse> {
 
-            return this.spQueryMERGE({ body: body, url: urlPOST }).then((response) => {
-                return response;
-            });
+        let result: IListItemResponse = { ok: false };
+
+        try {
+
+            let listProps: IListGET = await this.getListByTitle(listTitle);
+
+            if (listProps.exists) {
+
+                let body = {
+                    __metadata: {
+                        'type': `${listProps.details.ListItemEntityTypeFullName}`
+                    }
+                };
+
+                itemValues.forEach(i => {
+                    body[`${i.fieldName}`] = i.fieldValue;
+                });
+
+                let response: ISPBaseResponse = await this.spQueryMERGE({ body: JSON.stringify(body), url: `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/items(${itemId})` });
+                result = { ok: response.ok, error: response.error, result: response.result };
+            }
         }
         catch (error) {
-            return Promise.resolve({
-                ok: false,
-                result: error,
-                status: this.errorStatus,
-                statusText: error.message,
-                errorMethod: 'SPListOperations.updateListItem'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.updateListItem`));
+            Log.error(this.LogSource, error);
+            result.error = error;
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -382,12 +321,12 @@ class SPListOperations extends SPHelperBase {
      * @param lstDetail 
      * @param webURL 
      */
-    public getListMetadata(lstDetail: IListPOST, webURL: string): ISPPostRequest {
+    public getListMetadata(lstDetail: IListPOST): ISPPostRequest {
 
-        var postListData: string = `{ '__metadata': { 'type': 'SP.List' }, 'BaseTemplate': ${lstDetail.baseTemplate},'EnableFolderCreation': ${lstDetail.allowFolder}, 'ContentTypesEnabled': ${lstDetail.allowContentTypes}, 'AllowContentTypes': ${lstDetail.allowContentTypes}, 'Description': '${lstDetail.description}', 'Title':'${lstDetail.title}'}`;
-        var postURL: string = `${webURL}/_api/web/lists`;
+        let postListData: string = `{ '__metadata': { 'type': 'SP.List' }, 'BaseTemplate': ${lstDetail.baseTemplate},'EnableFolderCreation': ${lstDetail.allowFolder}, 'ContentTypesEnabled': ${lstDetail.allowContentTypes}, 'AllowContentTypes': ${lstDetail.allowContentTypes}, 'Description': '${lstDetail.description}', 'Title':'${lstDetail.title}'}`;
+        let postURL: string = `${this.WebUrl}/_api/web/lists`;
 
-        var post: ISPPostRequest = {
+        let post: ISPPostRequest = {
             body: postListData,
             url: postURL
         };
@@ -399,79 +338,32 @@ class SPListOperations extends SPHelperBase {
      * 
      * @param baseTemplate Returns the list details based on the Base Template
      */
-    public getListsDetailsByBaseTemplateID(baseTemplate: BaseTemplate): Promise<ISPBaseResponse> {
+    public async getListsDetailsByBaseTemplateID(baseTemplate: BaseTemplate): Promise<ISPBaseResponse> {
 
-        var url = `${this.WebUrl}/_api/web/lists?$filter=BaseTemplate eq ${baseTemplate}`;
+        let url = `${this.WebUrl}/_api/web/lists?$filter=BaseTemplate eq ${baseTemplate}`;
 
-        return this.spQueryGET(url).then((response) => {
-            return response;
-        });
+        return await this.spQueryGET(url);
     }
 
     /**
      * Returns the views associated with the list.
      * @param listTitle :Title of the list
      */
-    public getViewsByList(listTitle: string): Promise<ISPBaseResponse> {
-        try {
-            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/`;
+    public async getViewsByList(listTitle: string): Promise<ISPBaseResponse> {
 
-            return this.spQueryGET(url).then((response) => {
+        let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/`;
 
-                var fields: ISPBaseResponse = {
-                    errorMethod: 'SPFieldOperations.getFieldsByView',
-                    ok: response.ok,
-                    responseJSON: response.responseJSON,
-                    result: response.result.value,
-                    status: response.status,
-                    statusText: response.statusText
-                }
-
-                return Promise.resolve(fields);
-            });
-        } catch (error) {
-            Promise.resolve({
-                errorMethod: 'SPFieldOperations.getFieldsByView',
-                ok: false,
-                responseJSON: error.message,
-                result: [],
-                status: this.errorStatus,
-                statusText: error.message
-            });
-        }
+        return await this.spQueryGET(url);
     }
 
     /**
      * Returns all the content types associated with the list
      * @param listTitle : Title of the list
      */
-    public getContentTypesByList(listTitle: string): Promise<ISPBaseResponse> {
-        try {
-            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/contentTypes/`;
+    public async getContentTypesByList(listTitle: string): Promise<ISPBaseResponse> {
 
-            return this.spQueryGET(url).then((response) => {
-
-                var fields: ISPBaseResponse = {
-                    errorMethod: 'SPFieldOperations.getFieldsByView',
-                    ok: response.ok,
-                    responseJSON: response.responseJSON,
-                    result: response.result.value,
-                    status: response.status,
-                    statusText: response.statusText
-                }
-
-                return Promise.resolve(fields);
-            });
-        } catch (error) {
-            Promise.resolve({
-                errorMethod: 'SPFieldOperations.getFieldsByView',
-                ok: false,
-                responseJSON: error.message,
-                result: [],
-                status: this.errorStatus,
-                statusText: error.message
-            });
-        }
+        var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/contentTypes/`;
+        return await this.spQueryGET(url);
     }
 }
 

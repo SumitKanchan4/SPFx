@@ -55,15 +55,16 @@ interface IFieldPOST {
     allowMultiValues?: boolean;
 }
 
-interface IFieldGET {
-    title: string;
-    id: string;
-    schemaXml: string;
-    ok:boolean;
-    exists:boolean;
-    status:number;
-    statusText:string;
-    errorMethod:string;
+interface IFields {
+    ok: boolean;
+    error?: Error;
+    details?: any[];
+}
+
+interface IField {
+    ok: boolean;
+    error?: Error;
+    detail?: any;
 }
 
 /** Enum to represent the Field Types  */
@@ -88,5 +89,6 @@ enum FieldScope {
 
 export { FieldScope };
 export { FieldType };
-export { IFieldGET };
 export { IFieldPOST };
+export { IField };
+export { IFields };

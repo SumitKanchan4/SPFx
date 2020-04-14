@@ -1,26 +1,11 @@
-import { IODataList } from '@microsoft/sp-odata-types';
-
 /**
  * Interface to get the details of the list
  */
 interface IListGET {
-    /** If query has successfully executed */
     ok: boolean;
-
-    /** If the list exists or not */
     exists: boolean;
-
-    /** Details of the list if exists */
-    details?: IODataList;
-
-    /** status if any error occured (check if ok is false) */
-    status: number;
-
-    /** text of the status recieved */
-    statusText: string;
-
-    /** Method name to log where error occured */
-    errorMethod: string;
+    details?: any;
+    error?: Error;
 }
 
 /**
@@ -35,13 +20,23 @@ interface IListPOST {
     description: string;
 }
 
-interface IListItemResponse{
+interface IListItemsResponse {
     ok: boolean;
-    status: number;
-    statusText: string;
-    result: any[];
-    errorMethod: string;
-    responseJSON:string;
+    result?: any[];
+    error?: Error;
+    nextLink?: string;
+}
+
+
+interface IListItemResponse {
+    ok: boolean;
+    result?: any;
+    error?: Error;
+}
+
+interface IItem {
+    fieldName: string;
+    fieldValue: string;
 }
 
 /**
@@ -58,3 +53,5 @@ export { BaseTemplate };
 export { IListGET };
 export { IListPOST };
 export { IListItemResponse };
+export { IListItemsResponse };
+export { IItem };

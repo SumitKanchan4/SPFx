@@ -7,80 +7,55 @@
  */
 
 
-import { SPHelperBase } from './SPHelperBase';
-import { SPHelperCommon } from './SPHelperCommon';
+import { SPBase } from './SPBase';
+import { SPCore } from './SPCore';
 import { SPHttpClient } from '@microsoft/sp-http';
-import { IFieldGET, IFieldPOST, FieldType, FieldScope } from './Props/ISPFieldProps';
+import { IFieldPOST, FieldType, FieldScope, IFields, IField } from './Props/ISPFieldProps';
 import { ISPBaseResponse } from './Props/ISPBaseProps';
-import { SPLogger } from './SPLogger';
+import { Log } from '@microsoft/sp-core-library';
 
+const CLASS_NAME: string = `SPFieldOperations`;
 /**
  * This class will contain only the SPField specific methods
  */
-class SPFieldOperations extends SPHelperBase {
+class SPFieldOperations extends SPBase {
 
-    constructor(spHttpClient: SPHttpClient, webUrl: string, ) {
-        super(spHttpClient, webUrl);
+    constructor(spHttpClient: SPHttpClient, webUrl: string, logSource: string) {
+        super(spHttpClient, webUrl, logSource);
     }
 
     /** Use this method to get the SPFieldOperations class Object */
-    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPFieldOperations {
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string, logSource: string): SPFieldOperations {
 
-        return new SPFieldOperations(spHttpClient, webUrl);
+        return new SPFieldOperations(spHttpClient, webUrl, logSource);
     }
 
     /**
      * Method adds respective Field in respective View of respective List
      * @param listTitle : Title of the list in which view exists
      * @param viewName : Name of the view
-     * @param fieldTitle : Title of the field
+     * @param fieldName : internal name of the field
      */
-    public addFieldToView(listTitle: string, viewName: string, fieldTitle: string): Promise<IFieldGET> {
+    public async addFieldToView(listTitle: string, viewName: string, fieldName: string): Promise<ISPBaseResponse> {
+
+        let result: ISPBaseResponse;
         try {
 
             // Check if the column is already added to the following view
-            return this.getFieldByView(listTitle, viewName, fieldTitle).then((existResp) => {
+            let isAdded: boolean = await this.isFieldInView(listTitle, viewName, fieldName);
 
-                if (existResp.ok && !existResp.exists) {
+            if (!isAdded) {
+                let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/addviewfield('${fieldName}')`;
 
-                    var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/addviewfield('${fieldTitle}')`;
-
-                    // IF the field does not exist than add the field to the view
-                    return this.spQueryPOST({
-                        body: null,
-                        url: url
-                    }).then((response) => {
-
-                        var field: IFieldGET = {
-                            exists: false,
-                            id: null,
-                            ok: response.ok,
-                            schemaXml: null,
-                            status: response.status,
-                            statusText: response.statusText,
-                            title: fieldTitle,
-                            errorMethod: 'SPFieldOperations.addColumnToView'
-                        };
-
-                        return Promise.resolve(field);
-                    });
-                } else {
-                    return Promise.resolve(existResp);
-                }
-            });
-
+                result = await this.spQueryPOST({ body: undefined, url: url });
+            }
         } catch (error) {
-            SPLogger.logError(error as Error);
-            Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: fieldTitle,
-                errorMethod: 'SPFieldOperations.addColumnToView'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.addFieldToView`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -88,51 +63,25 @@ class SPFieldOperations extends SPHelperBase {
      * Method checks if the respective Field is the part of the respective View in respective List
      * @param listTitle : Title of the list in which view exists
      * @param viewName : Name of the view
-     * @param fieldTitle : Title of the field
+     * @param fieldName : Internal Name of the field
      */
-    public getFieldByView(listTitle: string, viewName: string, fieldTitle: string): Promise<IFieldGET> {
+    public async isFieldInView(listTitle: string, viewName: string, fieldName: string): Promise<boolean> {
+
+        let result: boolean = false;
         try {
-            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/`;
 
-            return this.spQueryGET(url).then((response) => {
+            let response: ISPBaseResponse = await this.getFieldsByView(listTitle, viewName);
 
-                var field: IFieldGET = {
-                    exists: false,
-                    id: null,
-                    ok: response.ok,
-                    schemaXml: null,
-                    status: response.status,
-                    statusText: response.statusText,
-                    title: fieldTitle,
-                    errorMethod: 'SPFieldOperations.getFieldByView'
-                };
-
-                if (response.ok && response.result.value.length > 0) {
-
-                    var fieldInternalName = SPHelperCommon.getFieldInternalName(fieldTitle);
-
-                    response.result.value.Items.forEach(element => {
-
-                        if (element == fieldInternalName || element == fieldTitle) {
-                            field.exists = true;
-                        }
-                    });
-                }
-
-                return Promise.resolve(field);
-            });
-        } catch (error) {
-            SPLogger.logError(error as Error);
-            Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: fieldTitle,
-                errorMethod: 'SPFieldOperations.getFieldByView'
-            });
+            if (response.ok) {
+                result = (response.result.Items as string[]).indexOf(fieldName) > -1;
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.isFieldInView`));
+            Log.error(this.LogSource, error);
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -140,34 +89,25 @@ class SPFieldOperations extends SPHelperBase {
      * Returns all the fiedls associated with the view
      * @param listTitle : title of the list
      * @param viewName : title of the view
+     * @returns All fields schema 
+     * @returns Array of all the field Internal Name
      */
-    public getFieldsByView(listTitle: string, viewName: string): Promise<ISPBaseResponse> {
+    public async getFieldsByView(listTitle: string, viewName: string): Promise<IFields> {
+
+        let result: IFields = { ok: false };
+
         try {
-            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/`;
-
-            return this.spQueryGET(url).then((response) => {
-
-                var fields: ISPBaseResponse = {
-                    errorMethod: 'SPFieldOperations.getFieldsByView',
-                    ok: response.ok,
-                    responseJSON: response.responseJSON,
-                    result: response.result.Items,
-                    status: response.status,
-                    statusText: response.statusText
-                }
-
-                return Promise.resolve(fields);
-            });
-        } catch (error) {
-            SPLogger.logError(error as Error);
-            Promise.resolve({
-                errorMethod: 'SPFieldOperations.getFieldsByView',
-                ok: false,
-                responseJSON: error.message,
-                result: [],
-                status: this.errorStatus,
-                statusText: error.message
-            });
+            let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/getByTitle('${viewName}')/ViewFields/`;
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            result = { ok: response.ok, details: response.result, error: response.error };
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getFieldsByView`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -175,33 +115,22 @@ class SPFieldOperations extends SPHelperBase {
     * Returns all the fiedls associated with the list
     * @param listTitle : title of the list
     */
-    public getFieldsByList(listTitle: string): Promise<ISPBaseResponse> {
+    public async getFieldsByList(listTitle: string): Promise<IFields> {
+
+        let result: IFields;
+
         try {
-            var url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/fields/`;
-
-            return this.spQueryGET(url).then((response) => {
-
-                var fields: ISPBaseResponse = {
-                    errorMethod: 'SPFieldOperations.getFieldsByView',
-                    ok: response.ok,
-                    responseJSON: response.responseJSON,
-                    result: response.result.value,
-                    status: response.status,
-                    statusText: response.statusText
-                }
-
-                return Promise.resolve(fields);
-            });
-        } catch (error) {
-            SPLogger.logError(error as Error);
-            Promise.resolve({
-                errorMethod: 'SPFieldOperations.getFieldsByView',
-                ok: false,
-                responseJSON: error.message,
-                result: [],
-                status: this.errorStatus,
-                statusText: error.message
-            });
+            let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/fields/`;
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            result = { details: !!response.result.value ? response.result.value : response.result, ok: response.ok, error: response.error };
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getFieldsByList`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -209,55 +138,31 @@ class SPFieldOperations extends SPHelperBase {
      * Method checks if the Field exists in the List.
      * If it exists then returns the details of the field
      * @param fieldTitle : Title of the Field
-     * @param lstName : Title of the list
+     * @param listName : Title of the list
      */
-    public getFieldByList(fieldTitle: string, lstName: string): Promise<IFieldGET> {
+    public async getFieldByList(fieldTitle: string, listName: string): Promise<IField> {
+
+        let result: IField;
 
         try {
-            var url = `${this.WebUrl}/_api/web/lists/getByTitle('${lstName}')/fields?$select=Title,SchemaXml,Id&$filter=Title eq '${fieldTitle}'&$top=1`;
+            let url = `${this.WebUrl}/_api/web/lists/getByTitle('${listName}')/fields?&$filter=Title eq '${fieldTitle}'`;
+            let response: ISPBaseResponse = await this.spQueryGET(url);
 
-            return this.spQueryGET(url).then((response) => {
-
-                var field: IFieldGET;
-
-                if (response.ok && response.result.value.length > 0) {
-                    field = {
-                        exists: true,
-                        id: response.result.value.Id,
-                        ok: response.ok,
-                        schemaXml: response.result.value.SchemaXml,
-                        status: response.status,
-                        statusText: response.statusText,
-                        title: fieldTitle,
-                        errorMethod: 'SPFieldOperations.getFieldByList'
-                    };
-                }
-                else {
-                    field = {
-                        exists: false,
-                        id: null,
-                        ok: response.ok,
-                        schemaXml: null,
-                        status: response.status,
-                        statusText: response.statusText,
-                        title: fieldTitle,
-                        errorMethod: response.errorMethod
-                    };
-                }
-                return Promise.resolve(field);
-            });
-        } catch (error) {
-            SPLogger.logError(error as Error);
-            Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: fieldTitle,
-                errorMethod: 'SPFieldOperations.getFieldByList'
-            });
+            if (response.ok && !!response.result.value && response.result.value.length > 0) {
+                result = { ok: true, detail: response.result.value[0], error: undefined };
+            }
+            else {
+                // Check if any error occured or the field does not found
+                result = { ok: response.ok, error: response.ok ? new Error(`Could not find the field with the specified title '${fieldTitle}' in the list`) : response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getFieldByList`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -267,56 +172,35 @@ class SPFieldOperations extends SPHelperBase {
      * @param listTitle : Title of the list
      * @param fieldSchemaXML : Schema Xml of the field
      */
-    public addSiteColumnToList(fieldTitle: string, listTitle: string, fieldSchemaXML: string): Promise<IFieldGET> {
+    public async addSiteColumnToList(fieldTitle: string, listTitle: string): Promise<IField> {
 
-        var fieldDetails: IFieldGET;
+        let result: IField;
         try {
+            // Get the filed info
+            let field: IField = await this.getFieldBySite(fieldTitle);
 
-            return this.getFieldByList(fieldTitle, listTitle).then((existResp) => {
+            if (field.ok) {
+                let url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/fields/createfieldasxml`;
 
-                if ((existResp.ok && existResp.exists) || !existResp.ok) {
-                    return existResp;
-                }
-                else {
+                var data = JSON.stringify({
+                    "parameters": {
+                        "__metadata": { "type": "SP.XmlSchemaFieldCreationInformation" },
+                        "Options": 8,
+                        "SchemaXml": field.detail.SchemaXml
+                    }
+                });
 
-                    var url = `${this.WebUrl}/_api/web/lists/getByTitle('${fieldTitle}')/fields/createfieldasxml`;
-
-                    var data = JSON.stringify({
-                        "parameters": {
-                            "__metadata": { "type": "SP.XmlSchemaFieldCreationInformation" },
-                            "Options": 8,
-                            "SchemaXml": fieldSchemaXML
-                        }
-                    });
-
-                    return this.spQueryPOST({ body: data, url: url }).then((createResp) => {
-
-                        fieldDetails = {
-                            exists: true,
-                            id: createResp.result.value.Id,
-                            ok: createResp.ok,
-                            schemaXml: createResp.result.value.SchemaXml,
-                            status: createResp.status,
-                            statusText: createResp.statusText,
-                            title: fieldTitle,
-                            errorMethod: 'SPFieldOperations.addSiteColumnToList'
-                        };
-                        return Promise.resolve(fieldDetails);
-                    });
-                }
-            });
-        } catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: fieldTitle,
-                errorMethod: 'SPFieldOperations.addSiteColumnToList'
-            });
+                let response: ISPBaseResponse = await this.spQueryPOST({ body: data, url: url });
+                result = { ok: response.ok, error: response.error, detail: response.result };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.addSiteColumnToList`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error, detail: undefined };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -324,67 +208,21 @@ class SPFieldOperations extends SPHelperBase {
      * Method creates the Site column
      * @param field : IFieldPost object to retrieve the information required
      */
-    public createSiteColumn(field: IFieldPOST): Promise<IFieldGET> {
+    public async createSiteColumn(field: IFieldPOST): Promise<IField> {
 
-        var postUrl: string = `${this.WebUrl}/_api/web/fields`;
-        postUrl = field.fieldType == FieldType.Lookup ? `${postUrl}/addfield` : postUrl;
-
+        let result: IField;
         try {
-            if (!SPHelperCommon.isNull(field)) {
-
-                return this.getFieldBySite(field.title).then((colResponse) => {
-
-                    // If the column already exists or the response fails
-                    if ((colResponse.ok && colResponse.exists) || !colResponse.ok) {
-                        return colResponse;
-                    }
-                    // If the column does not exists
-                    else if (colResponse && !colResponse.exists) {
-
-                        return this.spQueryPOST({ url: postUrl, body: this.getColumnMetadata(field, FieldScope.SiteColumn) }).
-                            then((response) => {
-
-                                var fieldDetails: IFieldGET = {
-                                    exists: true,
-                                    id: response.result.value.Id,
-                                    ok: response.ok,
-                                    schemaXml: response.result.value.SchemaXml,
-                                    status: response.status,
-                                    statusText: response.statusText,
-                                    title: field.title,
-                                    errorMethod: 'SPFieldOperations.createSiteColumn'
-                                };
-                                return Promise.resolve(fieldDetails);
-                            });
-                    }
-                });
-            }
-            else {
-                var fieldDetails: IFieldGET = {
-                    exists: false,
-                    id: null,
-                    ok: false,
-                    schemaXml: null,
-                    status: this.errorStatus,
-                    statusText: 'Parameter object cannot be null',
-                    title: field.title,
-                    errorMethod: 'SPFieldOperations.createSiteColumn'
-                };
-                return Promise.resolve(fieldDetails);
-            }
+            let postUrl: string = `${this.WebUrl}/_api/web/fields/${field.fieldType == FieldType.Lookup ? 'addfield' : ''}`;
+            let response: ISPBaseResponse = await this.spQueryPOST({ body: this.getColumnMetadata(field, FieldScope.SiteColumn), url: postUrl });
+            result = { ok: response.ok, error: response.error, detail: response.result };
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: field.title,
-                errorMethod: 'SPFieldOperations.createSiteColumn'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createSiteColumn`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
@@ -392,74 +230,48 @@ class SPFieldOperations extends SPHelperBase {
      * Checks if the fiels exists in site and returns with data 
      * @param fieldTitle :Title of the field
      */
-    public getFieldBySite(fieldTitle: string): Promise<IFieldGET> {
-        var fieldDetails: IFieldGET;
+    public async getFieldBySite(fieldTitle: string): Promise<IField> {
+        let result: IField;
 
         try {
+            let url = `${this.WebUrl}/_api/web/fields?$filter=Title eq '${fieldTitle}'`;
+            let response: ISPBaseResponse = await this.spQueryGET(url);
 
-            var url = `${this.WebUrl}/_api/web/fields?$filter=Title eq '${fieldTitle}'&$top=1`;
-
-            return this.spQueryGET(url).then((response) => {
-
-                if (response.ok && response.result.value.length > 0) {
-
-                    fieldDetails = {
-                        exists: true,
-                        id: response.result.value[0].Id,
-                        ok: response.ok,
-                        schemaXml: response.result.value[0].SchemaXml,
-                        status: response.status,
-                        statusText: response.statusText,
-                        title: fieldTitle,
-                        errorMethod: 'SPFieldOperations.fieldExistsInSite'
-                    };
-                }
-                else {
-                    fieldDetails = {
-                        exists: false,
-                        id: null,
-                        ok: response.ok,
-                        schemaXml: null,
-                        status: response.status,
-                        statusText: response.statusText,
-                        title: fieldTitle,
-                        errorMethod: response.errorMethod
-                    };
-                }
-
-                return Promise.resolve(fieldDetails);
-            });
+            if (response.ok && !!response.result.value && response.result.value.length > 0) {
+                result = { ok: true, detail: response.result.value[0], error: undefined };
+            }
+            else {
+                // Check if any error occured or the field does not found
+                result = { ok: response.ok, error: response.ok ? new Error(`Could not find the field with the specified title '${fieldTitle}' in the site`) : response.error };
+            }
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: fieldTitle,
-                errorMethod: 'SPFieldOperations.fieldExistsInSite'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getFieldBySite`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
     }
 
-    /** Method returns the metadata of the solumn based on the IFieldPOST object */
+    /** 
+     * Method returns the metadata of the solumn based on the IFieldPOST object 
+     * */
     public getColumnMetadata(fieldDetails: IFieldPOST, fieldScope: FieldScope): string {
 
         var metadata: string;
-        fieldDetails.allowMultiValues = SPHelperCommon.isNull(fieldDetails.allowMultiValues) ? false : fieldDetails.allowMultiValues;
+        fieldDetails.allowMultiValues = SPCore.isNull(fieldDetails.allowMultiValues) ? false : fieldDetails.allowMultiValues;
 
         switch (fieldDetails.fieldType) {
             case FieldType.MultiChoice:
                 var multiChoices = `'${fieldDetails.choices.join(`','`)}'`;
-                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpty(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
+                fieldDetails.defaultValue = SPCore.isEmptyString(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
                 metadata = `{ '__metadata': { 'type': 'SP.FieldMultiChoice' }, 'FieldTypeKind': 15, 'DefaultValue': '${fieldDetails.defaultValue}', {COLUMNGROUP}, 'Required': ${fieldDetails.isRequired}, 'Title': '${fieldDetails.title}', 'Choices': { '__metadata': { 'type': 'Collection(Edm.String)' }, 'results': [${multiChoices}] }, 'EditFormat': 0 }`;
                 break;
             case FieldType.Choice:
                 var choices = `'${fieldDetails.choices.join(`','`)}'`;
-                fieldDetails.defaultValue = SPHelperCommon.isStringNullOrEmpty(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
+                fieldDetails.defaultValue = SPCore.isEmptyString(fieldDetails.defaultValue) ? fieldDetails.choices[0] : fieldDetails.defaultValue;
                 metadata = `{ '__metadata': { 'type': 'SP.FieldChoice' }, 'FieldTypeKind': 6, 'DefaultValue': '${fieldDetails.defaultValue}', {COLUMNGROUP} 'Required':  ${fieldDetails.isRequired}, 'Title': '${fieldDetails.title}', 'Choices': { '__metadata': { 'type': 'Collection(Edm.String)' }, 'results': [${choices}] }, 'EditFormat': 0 }`;
                 break;
             case FieldType.Number:
@@ -489,59 +301,32 @@ class SPFieldOperations extends SPHelperBase {
     }
 
     /**
-     * Method adds the column to the list
+     * Method creates the column to the list
      * @param field : IFieldPOST object to retrieve required information
      */
-    public addColumnToList(field: IFieldPOST): Promise<IFieldGET> {
+    public async createListColumn(field: IFieldPOST): Promise<IField> {
 
-        var postUrl: string = `${this.WebUrl}/_api/web/lists/getByTitle('${field.listName}')/fields`;
-        postUrl = field.fieldType == FieldType.Lookup ? `${postUrl}/addfield` : postUrl;
-        var fieldDetails: IFieldGET;
-
+        let result: IField;
         try {
-            if (!SPHelperCommon.isNull(field)) {
+            let postUrl: string = `${this.WebUrl}/_api/web/lists/getByTitle('${field.listName}')/fields/${field.fieldType == FieldType.Lookup ? 'addfield' : ''}`;
+            let response: ISPBaseResponse = await this.spQueryPOST({ body: this.getColumnMetadata(field, FieldScope.ListColumn), url: postUrl });
 
-                return this.getFieldByList(field.title, field.listName).then((existResp) => {
+            // check if the column needs to be added to the view, then view name and list name are manadatory
+            if (field.addToView && !SPCore.isEmptyString(field.viewName) && !SPCore.isEmptyString(field.listName))
+                await this.addFieldToView(field.listName, field.viewName, response.result.InternalName);
 
-                    if ((existResp.ok && existResp.exists) || !existResp.ok) {
-                        return existResp;
-                    }
-                    else if (existResp.ok && !existResp.exists) {
-
-                        return this.spQueryPOST({ url: postUrl, body: this.getColumnMetadata(field, FieldScope.ListColumn) }).then((fieldResp) => {
-                            fieldDetails = {
-                                exists: true,
-                                id: fieldResp.result.value[0].Id,
-                                ok: fieldResp.ok,
-                                schemaXml: fieldResp.result.value[0].SchemaXml,
-                                status: fieldResp.status,
-                                statusText: fieldResp.statusText,
-                                title: field.title,
-                                errorMethod: 'SPFieldOperations.addColumnToList'
-                            };
-
-                            return Promise.resolve(fieldDetails);
-
-                        });
-                    }
-                });
-            }
+            result = { ok: response.ok, error: response.error, detail: response.result };
         }
         catch (error) {
-            SPLogger.logError(error as Error);
-            return Promise.resolve({
-                exists: false,
-                id: null,
-                ok: false,
-                schemaXml: null,
-                status: this.errorStatus,
-                statusText: error.message,
-                title: field.title,
-                errorMethod: 'SPFieldOperations.addColumnToList'
-            });
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createListColumn`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
         }
-
+        finally {
+            return Promise.resolve(result);
+        }
     }
+
 }
 
 export { SPFieldOperations };

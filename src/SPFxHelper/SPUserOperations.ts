@@ -1,19 +1,19 @@
-import { SPHelperBase } from './SPHelperBase';
+import { SPBase } from './SPBase';
 import { SPHttpClient } from '@microsoft/sp-http';
-import { SPHelperCommon } from './SPHelperCommon';
+import { SPCore } from './SPCore';
 
-class SPUserOperations extends SPHelperBase {
+class SPUserOperations extends SPBase {
 
     private static webUrl: string = undefined;
 
-    private constructor(spHttpClient: SPHttpClient, webUrl: string) {
-        super(spHttpClient, webUrl);
+    constructor(spHttpClient: SPHttpClient, webUrl: string, logSource: string) {
+        super(spHttpClient, webUrl, logSource);
     }
 
-    /** Use this method to get the SPUserOperations class Object */
-    public static getInstance(spHttpClient: SPHttpClient, webUrl: string): SPUserOperations {
+    /** Use this method to get the SPCommonOperations class Object */
+    public static getInstance(spHttpClient: SPHttpClient, webUrl: string, logSource: string): SPUserOperations {
 
-        return new SPUserOperations(spHttpClient, webUrl);
+        return new SPUserOperations(spHttpClient, webUrl, logSource);
     }
 
 

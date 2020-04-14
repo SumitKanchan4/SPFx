@@ -1,19 +1,8 @@
 interface IDocResponse {
     ok: boolean;
-    status: number;
-    statusText: string;
-    image: string;
-    fileName: string;
-    fileUrl: string;
-    id:string;
-    success:boolean;
-    errorMethod: string;
-}
-
-interface IDoc {
-    fileName: string;
-    fileUrl: string;
-    id: string;
+    imageUrl?: string;
+    fileName?: string;
+    error: Error;
 }
 
 interface IUserProps {
@@ -27,6 +16,5 @@ interface IUserProps {
     userName: string;
 }
 
-export { IDoc };
 export { IDocResponse };
 export { IUserProps };

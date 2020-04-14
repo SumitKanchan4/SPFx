@@ -1,15 +1,12 @@
-interface ISPBaseResponse {
-    ok: boolean;
-    status: number;
-    statusText: string;
-    result: any;
-    errorMethod: string;
-    responseJSON?: string;
-}
-
 interface ISPPostRequest {
     url: string;
     body: string;
+}
+
+interface ISPBaseResponse {
+    result?: any;
+    ok: boolean;
+    error?: Error;
 }
 
 export { ISPBaseResponse };
