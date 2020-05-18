@@ -1,5 +1,10 @@
 # **SharePoint Framework Helper**
 
+[![](https://img.shields.io/badge/visit-SharePointWidgets.com-green)](https://www.sharepointwidgets.com/)
+[![GitHub release](https://img.shields.io/npm/l/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
+[![npm](https://img.shields.io/npm/v/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
+[![npm bundle size](https://img.shields.io/bundlephobia/min/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
+[![npm](https://img.shields.io/npm/dw/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
 
 [![SharePoint Framework Helper](https://github.com/SumitKanchan4/SPFx/raw/master/Images/sharePointWidgetsBanner.png?raw=true "SharePoint Framework Helper" )](https://www.sharepointwidgets.com)
 
