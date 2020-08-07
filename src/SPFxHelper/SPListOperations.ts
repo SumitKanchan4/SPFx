@@ -2,7 +2,7 @@ import { SPBase } from './SPBase';
 import { IListGET, IListPOST, IListItemResponse, IItem } from './Props/ISPListProps';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { ISPPostRequest, ISPBaseResponse } from './Props/ISPBaseProps';
-import { IListItemsResponse, BaseTemplate } from './Props/ISPListProps';
+import { IListItemsResponse, BaseTemplate, ILibraryItemResponse, ILibraryItemsResponse } from './Props/ISPListProps';
 import { Log } from '@microsoft/sp-core-library';
 import { SPCore } from './SPCore';
 
@@ -148,16 +148,27 @@ class SPListOperations extends SPBase {
     public async getListItemByID(listTitle: string, itemID: string): Promise<IListItemResponse> {
 
         let result: IListItemResponse = { ok: false };
-        let response: IListItemsResponse = await this.getListItemsBase(listTitle, `(${itemID})`);
+        try {
+            
+            let url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/Items(${itemID})`;
 
-        result.ok = response.ok;
-        result.error = response.error;
-
-        if (result.ok) {
-            result.result = response.result && response.result.length > 0 ? response.result[0] : undefined;
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            if (response.ok) {
+                result = { ok: true, result: response.result };
+            }
+            else {
+                result = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListItemByID`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
         }
 
-        return Promise.resolve(result);
     }
 
     /**
@@ -169,6 +180,77 @@ class SPListOperations extends SPBase {
 
         let query = rowCount && rowCount > 0 ? `?$top=${rowCount}` : undefined;
         return await this.getListItemsBase(listTitle, query);
+    }
+
+    /**
+     * Method returns the items from the respective list 
+     * @param libraryTitle : Title of the library from where  data is required
+     * @param query : Query srtarting from '?' if any
+     */
+    private async getLibraryItemsBase(libraryTitle: string, query?: string): Promise<ILibraryItemsResponse> {
+
+        let result: IListItemsResponse;
+        try {
+            let url = `${this.WebUrl}/_api/web/lists/getByTitle('${libraryTitle}')/Files`;
+            url = SPCore.isEmptyString(query) ? url : `${url}${query}`;
+
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            if (response.ok) {
+                result = { ok: true, result: response.result.value, nextLink: !!response.result["odata.nextLink"] ? response.result["odata.nextLink"] : undefined };
+            }
+            else {
+                result = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getLibraryItemsBase`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
+        }
+    }
+
+    /**
+     * Method returns the item of the respective list by Item ID
+     * @param libraryTitle : Title of the library from where  data is required
+     * @param fileId : ID of the file (do not confuse with the item)
+     */
+    public async getLibraryItemByFileID(libraryTitle: string, fileId: string): Promise<ILibraryItemResponse> {
+
+        let result: ILibraryItemResponse = { ok: false };
+        try {
+           
+            let url = `${this.WebUrl}/_api/web/lists/getByTitle('${libraryTitle}')/Files('${fileId}')`;
+
+            let response: ISPBaseResponse = await this.spQueryGET(url);
+            if (response.ok) {
+                result = { ok: true, result: response.result };
+            }
+            else {
+                result = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getLibraryItemByFileID`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
+        }
+    }
+
+    /**
+     * Method returns all the items based on max rows
+     * @param libraryTitle : library title
+     * @param rowCount : number of rows to return. Define 0 to get default max rows
+     */
+    public async getLibraryItems(libraryTitle: string, rowCount: number): Promise<ILibraryItemsResponse> {
+
+        let query = rowCount && rowCount > 0 ? `?$top=${rowCount}` : undefined;
+        return await this.getLibraryItemsBase(libraryTitle, query);
     }
 
     /**
@@ -223,7 +305,7 @@ class SPListOperations extends SPBase {
         try {
             let response: ISPBaseResponse = await this.spQueryPOST({ body: undefined, url: `${this.WebUrl}/_api/web/folders/add('${docLib}/${folderName}')` });
             result = { error: response.error, ok: response.ok, result: response.result };
-        } 
+        }
         catch (error) {
             Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.createFolderInDocLib`));
             Log.error(this.LogSource, error);
