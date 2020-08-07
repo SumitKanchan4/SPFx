@@ -34,6 +34,20 @@ interface IListItemResponse {
     error?: Error;
 }
 
+interface ILibraryItemsResponse {
+    ok: boolean;
+    result?: any[];
+    error?: Error;
+    nextLink?: string;
+}
+
+
+interface ILibraryItemResponse {
+    ok: boolean;
+    result?: any;
+    error?: Error;
+}
+
 interface IItem {
     fieldName: string;
     fieldValue: string;
@@ -55,3 +69,5 @@ export { IListPOST };
 export { IListItemResponse };
 export { IListItemsResponse };
 export { IItem };
+export { ILibraryItemResponse };
+export { ILibraryItemsResponse };
