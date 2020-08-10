@@ -111,6 +111,32 @@ class SPListOperations extends SPBase {
     }
 
     /**
+     * Method returns the items based on the next link provided 
+     * @param nextLink : Next link received in the previous query
+     */
+    public async getListByNextLink(nextLink: string): Promise<IListItemsResponse> {
+
+        let result: IListItemsResponse;
+        try {
+            let response: ISPBaseResponse = await this.spQueryGET(nextLink);
+            if (response.ok) {
+                result = { ok: true, result: response.result.value, nextLink: !!response.result["odata.nextLink"] ? response.result["odata.nextLink"] : undefined };
+            }
+            else {
+                result = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListItemsBase`));
+            Log.error(this.LogSource, error);
+            result = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(result);
+        }
+    }
+
+    /**
      * Method returns the items from the respective list 
      * @param listTitle : Title of the list from where  data is required
      * @param query : Query srtarting from '?' if any
@@ -149,7 +175,7 @@ class SPListOperations extends SPBase {
 
         let result: IListItemResponse = { ok: false };
         try {
-            
+
             let url = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/Items(${itemID})`;
 
             let response: ISPBaseResponse = await this.spQueryGET(url);
@@ -221,7 +247,7 @@ class SPListOperations extends SPBase {
 
         let result: ILibraryItemResponse = { ok: false };
         try {
-           
+
             let url = `${this.WebUrl}/_api/web/lists/getByTitle('${libraryTitle}')/Files('${fileId}')`;
 
             let response: ISPBaseResponse = await this.spQueryGET(url);
