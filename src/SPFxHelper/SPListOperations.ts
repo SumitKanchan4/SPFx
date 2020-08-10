@@ -114,7 +114,7 @@ class SPListOperations extends SPBase {
      * Method returns the items based on the next link provided 
      * @param nextLink : Next link received in the previous query
      */
-    public async getListByNextLink(nextLink: string): Promise<IListItemsResponse> {
+    public async getListItemsByNextLink(nextLink: string): Promise<IListItemsResponse> {
 
         let result: IListItemsResponse;
         try {
