@@ -1,6 +1,6 @@
 {
   "name": "spfxhelper",
-  "version": "4.0.4",
+  "version": "4.0.5",
   "description": "Bundle of core functions which can be used in every project",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
