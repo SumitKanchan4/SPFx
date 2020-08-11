@@ -1,5 +1,5 @@
 import { SPBase } from './SPBase';
-import { IListGET, IListPOST, IListItemResponse, IItem } from './Props/ISPListProps';
+import { IListGET, IListPOST, IListItemResponse, IItem, IListViews, IListView } from './Props/ISPListProps';
 import { SPHttpClient } from '@microsoft/sp-http';
 import { ISPPostRequest, ISPBaseResponse } from './Props/ISPBaseProps';
 import { IListItemsResponse, BaseTemplate, ILibraryItemResponse, ILibraryItemsResponse } from './Props/ISPListProps';
@@ -127,7 +127,7 @@ class SPListOperations extends SPBase {
             }
         }
         catch (error) {
-            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListItemsBase`));
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getListItemsByNextLink`));
             Log.error(this.LogSource, error);
             result = { ok: false, error: error };
         }
@@ -457,11 +457,58 @@ class SPListOperations extends SPBase {
      * Returns the views associated with the list.
      * @param listTitle :Title of the list
      */
-    public async getViewsByList(listTitle: string): Promise<ISPBaseResponse> {
+    public async getViewsByList(listTitle: string): Promise<IListViews> {
 
-        let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/`;
+        let views: IListViews = { ok: false };
+        try {
+            let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views/`;
 
-        return await this.spQueryGET(url);
+            let response = await this.spQueryGET(url);
+
+            if (response.ok) {
+                views = { ok: true, views: response.result.value };
+            }
+            else {
+                views = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getViewsByList`));
+            Log.error(this.LogSource, error);
+            views = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(views);
+        }
+    }
+
+    /**
+     * Returns the default view for the corresponding list
+     * @param listTitle :Title of the list
+     */
+    public async getDefaultView(listTitle:string): Promise<IListView>{
+        
+        let view: IListView = { ok: false };
+        try {
+            let url: string = `${this.WebUrl}/_api/web/lists/getByTitle('${listTitle}')/views?$filter=DefaultView eq true`;
+
+            let response = await this.spQueryGET(url);
+
+            if (response.ok) {
+                view = { ok: true, view: response.result.value[0] };
+            }
+            else {
+                view = { ok: false, error: response.error };
+            }
+        }
+        catch (error) {
+            Log.error(this.LogSource, new Error(`Error occured in ${CLASS_NAME}.getDefaultView`));
+            Log.error(this.LogSource, error);
+            view = { ok: false, error: error };
+        }
+        finally {
+            return Promise.resolve(view);
+        }
     }
 
     /**
