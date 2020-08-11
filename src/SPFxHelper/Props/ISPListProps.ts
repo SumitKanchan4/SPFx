@@ -53,6 +53,18 @@ interface IItem {
     fieldValue: string;
 }
 
+interface IListViews{
+    ok:boolean;
+    views?: any[];
+    error?: Error;
+}
+
+interface IListView{
+    ok:boolean;
+    view?: any;
+    error?: Error;
+}
+
 /**
  * Enum for the base templates supported right now
  */
@@ -71,3 +83,5 @@ export { IListItemsResponse };
 export { IItem };
 export { ILibraryItemResponse };
 export { ILibraryItemsResponse };
+export { IListViews };
+export { IListView };
