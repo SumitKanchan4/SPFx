@@ -7,6 +7,10 @@ interface ISPBaseResponse {
     result?: any;
     ok: boolean;
     error?: Error;
+    status?: number;
+    statusText?: string;
+    errorMethod?: string;
+    responseJSON?: string;
 }
 
 export { ISPBaseResponse };

@@ -5,6 +5,8 @@
 [![npm](https://img.shields.io/npm/v/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
 [![npm](https://img.shields.io/npm/dw/spfxhelper?style=plastic)](https://www.npmjs.com/package/spfxhelper)
+![npm](https://img.shields.io/badge/SPFx%20Version-1.12.1-green)
+
 
 [![SharePoint Framework Helper](https://github.com/SumitKanchan4/SPFx/raw/master/Images/sharePointWidgetsBanner.png?raw=true "SharePoint Framework Helper" )](https://www.sharepointwidgets.com)
 
